@@ -401,8 +401,26 @@ function setSyncStatus(status, msg) {
 }
 
 function gasGet(params) {
-  var url = GAS_URL + '?' + Object.keys(params).map(function(k){return k+'='+encodeURIComponent(params[k])}).join('&');
-  return fetch(url).then(function(r){return r.json()});
+  return new Promise(function(resolve, reject) {
+    var cbName = 'cb_' + Date.now();
+    var script = document.createElement('script');
+    var url = GAS_URL + '?' + Object.keys(params).map(function(k) {
+      return k + '=' + encodeURIComponent(params[k]);
+    }).join('&') + '&callback=' + cbName;
+    window[cbName] = function(data) {
+      delete window[cbName];
+      document.body.removeChild(script);
+      resolve(data);
+    };
+    script.onerror = function() {
+      delete window[cbName];
+      document.body.removeChild(script);
+      reject(new Error('Network error'));
+    };
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
 }
 
 function gasPost(body) {
