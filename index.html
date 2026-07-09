@@ -354,8 +354,8 @@ input[readonly]{background:var(--bg2);color:var(--text2)}
 // ═══════════════════════════════════════════════════════════════
 // CONFIGURATION — your Google Apps Script URL goes here
 // ═══════════════════════════════════════════════════════════════
-
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbydkWnQpIzJbQ4oKbjDZem5C2JXipMal1-0Ku8tnXrVPrLWH7qyxHREpo2htslaSb9H/exec';
+
 // ═══════════════════════════════════════════════════════════════
 // DATA STORE
 // ═══════════════════════════════════════════════════════════════
@@ -402,33 +402,60 @@ function setSyncStatus(status, msg) {
 
 function gasGet(params) {
   return new Promise(function(resolve, reject) {
-    var cbName = 'cb_' + Date.now();
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*10000);
     var script = document.createElement('script');
+    var timeout = setTimeout(function() {
+      delete window[cbName];
+      if (script.parentNode) document.body.removeChild(script);
+      reject(new Error('Request timed out'));
+    }, 15000);
     var url = GAS_URL + '?' + Object.keys(params).map(function(k) {
       return k + '=' + encodeURIComponent(params[k]);
     }).join('&') + '&callback=' + cbName;
     window[cbName] = function(data) {
+      clearTimeout(timeout);
       delete window[cbName];
-      document.body.removeChild(script);
+      if (script.parentNode) document.body.removeChild(script);
       resolve(data);
     };
     script.onerror = function() {
+      clearTimeout(timeout);
       delete window[cbName];
-      document.body.removeChild(script);
-      reject(new Error('Network error'));
+      if (script.parentNode) document.body.removeChild(script);
+      reject(new Error('Script load error'));
     };
     script.src = url;
     document.body.appendChild(script);
   });
 }
-}
 
 function gasPost(body) {
-  return fetch(GAS_URL, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(body)
-  }).then(function(r){return r.json()});
+  return new Promise(function(resolve, reject) {
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+    var script = document.createElement('script');
+    var timeout = setTimeout(function() {
+      delete window[cbName];
+      if (script.parentNode) document.body.removeChild(script);
+      reject(new Error('Request timed out'));
+    }, 15000);
+    // Encode body as base64 via URL param using JSONP
+    var encoded = encodeURIComponent(JSON.stringify(body));
+    var url = GAS_URL + '?method=POST&body=' + encoded + '&callback=' + cbName;
+    window[cbName] = function(data) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      if (script.parentNode) document.body.removeChild(script);
+      resolve(data);
+    };
+    script.onerror = function() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      if (script.parentNode) document.body.removeChild(script);
+      reject(new Error('Script load error'));
+    };
+    script.src = url;
+    document.body.appendChild(script);
+  });
 }
 
 function syncNow() {
