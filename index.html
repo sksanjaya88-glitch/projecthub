@@ -828,6 +828,37 @@ G('save-payment').addEventListener('click',function(){
 });
 G('btn-new-payment').addEventListener('click',function(){openPaymentModal(null)});
 G('close-payment').addEventListener('click',function(){closeModal('mo-payment')});
+
+// ═══════════════════════════════════════════════════════════════
+// INIT — load from Google Sheets on startup
+// ═══════════════════════════════════════════════════════════════
+function showApp() {
+  G('loading-screen').classList.add('hidden');
+  G('app').style.display='flex';
+  refreshProjNav();
+  renderDash();
+}
+
+window.addEventListener('load', function() {
+  G('loading-msg').textContent = 'Loading data from Google Sheets...';
+  gasGet({action:'load'}).then(function(data) {
+    if(data.error) throw new Error(data.error);
+    projects    = data.projects    || [];
+    pmEntries   = data.pmEntries   || [];
+    suppliers   = data.suppliers   || [];
+    contractors = data.contractors || [];
+    payments    = data.payments    || [];
+    var nums = projects.map(function(p){return parseInt((p.num||'').replace('AVP-',''))||0});
+    projCounter = nums.length ? Math.max.apply(null,nums)+1 : 1;
+    setSyncStatus('ok','Connected');
+    showApp();
+    toast('Connected to Google Sheets');
+  }).catch(function(e) {
+    setSyncStatus('err','Offline');
+    G('loading-msg').textContent = 'Could not connect. Working offline.';
+    setTimeout(function(){ showApp(); toast('Working offline — changes will not be saved', true); }, 2000);
+  });
+});
 </script>
 </body>
 </html>
