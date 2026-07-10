@@ -145,11 +145,11 @@ input[readonly]{background:var(--bg2);color:var(--text2)}
 </div>
 <div class="main">
   <div class="pg active" id="pg-dashboard">
-    <div class="ph"><div><div class="pt">Dashboard</div><div class="ps">Summary of all activity</div></div></div>
-    <div class="stats" id="dash-stats"></div>
+    <div class="ph"><div><div class="pt">Dashboard</div><div class="ps">Summary of all activity</div></div><button class="bsm" onclick="syncNow()" style="font-size:11px">&#8635; Refresh Data</button></div>
+    <div class="stats" id="dash-stats"><div class="stat"><div class="sl">Active Projects</div><div class="sv">—</div></div><div class="stat"><div class="sl">Completed</div><div class="sv">—</div></div><div class="stat"><div class="sl">Suppliers</div><div class="sv">—</div></div><div class="stat"><div class="sl">Contractors</div><div class="sv">—</div></div></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="card"><div class="ch">Active Projects</div><div id="dash-proj"></div></div>
-      <div class="card"><div class="ch">Pending Approvals</div><div id="dash-appr"></div></div>
+      <div class="card"><div class="ch">Active Projects</div><div id="dash-proj"><div class="empty">Loading...</div></div></div>
+      <div class="card"><div class="ch">Pending Approvals</div><div id="dash-appr"><div class="empty">Loading...</div></div></div>
     </div>
   </div>
   <div class="pg" id="pg-projects">
@@ -281,7 +281,7 @@ function nav(pg,el){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('active')});
   document.querySelectorAll('.ni,.proj-ni').forEach(function(n){n.classList.remove('active')});
   G('pg-'+pg).classList.add('active');if(el)el.classList.add('active');
-  var fns={dashboard:renderDash,projects:renderProjects,pm:renderPM,suppliers:renderSuppliers,contractors:renderContractors,payments:renderPayments,approvals:renderApprovals};
+  var fns={dashboard:function(){renderDash()},projects:function(){renderProjects()},pm:function(){renderPM()},suppliers:function(){renderSuppliers()},contractors:function(){renderContractors()},payments:function(){renderPayments()},approvals:function(){renderApprovals()}};
   if(fns[pg])fns[pg]();
 }
 function openModal(id){G(id).classList.add('open')}
@@ -300,7 +300,7 @@ function syncNow(){
     var nums=projects.map(function(p){return parseInt((p.num||'').replace('AVP-',''))||0});
     projCounter=nums.length?Math.max.apply(null,nums)+1:1;
     setSS('ok','Synced '+new Date().toLocaleTimeString('en-LK',{hour:'2-digit',minute:'2-digit'}));
-    refreshNav();renderDash();toast('Synced');
+    refreshNav();if(typeof renderDash==='function')renderDash();toast('Synced');
   }).catch(function(e){setSS('err','Sync failed');toast('Sync failed: '+e.message,true)});
 }
 function openSheet(id){
@@ -609,20 +609,35 @@ function exportAll(){
   XLSX.writeFile(wb,'ProjectHub_'+new Date().toISOString().split('T')[0]+'.xlsx');toast('Exported');
 }
 // INIT
-function showApp(){G('ls').classList.add('hidden');G('app').style.display='flex';refreshNav();renderDash();}
-window.addEventListener('load',function(){
-  G('lmsg').textContent='Loading data from Google Sheets...';
+function showApp(){G('ls').classList.add('hidden');G('app').style.display='flex';refreshNav();if(typeof renderDash==='function')renderDash();}
+function loadData(){
+  G('lmsg').textContent='Loading from Google Sheets...';
+  var done=false;
+  // Safety fallback — show app after 8 seconds no matter what
+  var fallback=setTimeout(function(){
+    if(!done){done=true;setSS('err','Offline — could not connect');showApp();toast('Working offline — data not saved',true);}
+  },8000);
   gasGet({action:'load'}).then(function(data){
+    if(done)return;done=true;clearTimeout(fallback);
     if(data.error)throw new Error(data.error);
-    projects=data.projects||[];pmEntries=data.pmEntries||[];suppliers=data.suppliers||[];contractors=data.contractors||[];payments=data.payments||[];
+    projects=data.projects||[];
+    pmEntries=data.pmEntries||[];
+    suppliers=data.suppliers||[];
+    contractors=data.contractors||[];
+    payments=data.payments||[];
     var nums=projects.map(function(p){return parseInt((p.num||'').replace('AVP-',''))||0});
     projCounter=nums.length?Math.max.apply(null,nums)+1:1;
-    setSS('ok','Connected');showApp();toast('Connected to Google Sheets');
+    setSS('ok','Connected');
+    showApp();
+    toast('Connected to Google Sheets');
   }).catch(function(e){
-    setSS('err','Offline');G('lmsg').textContent='Could not connect. Working offline.';
-    setTimeout(function(){showApp();toast('Working offline',true);},2000);
+    if(done)return;done=true;clearTimeout(fallback);
+    setSS('err','Offline');
+    showApp();
+    toast('Offline: '+e.message,true);
   });
-});
+}
+window.addEventListener('load',loadData);
 </script>
 </body>
 </html>
