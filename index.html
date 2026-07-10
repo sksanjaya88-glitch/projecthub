@@ -137,6 +137,7 @@ input[readonly]{background:var(--bg2);color:var(--text2)}
     <div class="nav-lbl">Finance</div>
     <div class="ni" id="nav-payments" onclick="nav('payments',this)">&#128196; Payments</div>
     <div class="ni" id="nav-approvals" onclick="nav('approvals',this)">&#10003; Approvals</div>
+    <div class="ni" id="nav-finance" onclick="nav('finance',this)">&#128184; Finance</div>
   </div>
   <div style="margin-top:auto;padding:10px 14px;border-top:.5px solid var(--border);display:flex;flex-direction:column;gap:6px">
     <button onclick="syncNow()" style="width:100%;justify-content:center">&#8635; Sync Now</button>
@@ -158,10 +159,14 @@ input[readonly]{background:var(--bg2);color:var(--text2)}
     <div class="card"><div class="ch"><span>Completed</span><span id="complete-count" class="bdg bc">0</span></div><div class="tw"><table><thead><tr><th>No.</th><th>Short Name</th><th>Tender Name</th><th>Tender Amt</th><th>Margin</th><th>Start</th><th>End</th><th>PM</th><th>Status</th><th></th></tr></thead><tbody id="proj-complete-tb"></tbody></table></div></div>
   </div>
   <div class="pg" id="pg-pm"><div class="ph"><div><div class="pt">PM Entry</div></div><button class="bpm" id="btn-new-pm">+ New PM Entry</button></div><div class="card"><div class="tw"><table><thead><tr><th>Project No.</th><th>Project</th><th>Cost Est.</th><th>OH Est.</th><th>Profit Est.</th><th>Margin Est.</th><th>vs Tender</th><th>Date</th></tr></thead><tbody id="pm-tb"></tbody></table></div></div></div>
-  <div class="pg" id="pg-suppliers"><div class="ph"><div><div class="pt">Suppliers</div></div><button class="bp" id="btn-new-supplier">+ Register Supplier</button></div><div class="card"><div class="tw"><table><thead><tr><th>Supplier No.</th><th>Project</th><th>Company</th><th>Short Name</th><th>VAT No.</th><th>Phone</th><th>Total Paid</th><th></th></tr></thead><tbody id="supp-tb"></tbody></table></div></div></div>
-  <div class="pg" id="pg-contractors"><div class="ph"><div><div class="pt">Contractors</div></div><button class="bp" id="btn-new-contractor">+ Register Contractor</button></div><div class="card"><div class="tw"><table><thead><tr><th>No.</th><th>Project</th><th>Company</th><th>Trade</th><th>Agreed Value</th><th>Progress</th><th>Total Paid</th><th>Balance</th><th></th></tr></thead><tbody id="cont-tb"></tbody></table></div></div></div>
+  <div class="pg" id="pg-suppliers"><div class="ph"><div><div class="pt">Suppliers</div></div><button class="bp" id="btn-new-supplier">+ Register Supplier</button></div><div class="card"><div class="tw"><table><thead><tr><th>Supplier No.</th><th>Project</th><th>Company</th><th>Short Name</th><th>VAT No.</th><th>Phone</th><th>Direct Paid</th><th>Sub Deducted</th><th></th></tr></thead><tbody id="supp-tb"></tbody></table></div></div></div>
+  <div class="pg" id="pg-contractors"><div class="ph"><div><div class="pt">Contractors</div></div><button class="bp" id="btn-new-contractor">+ Register Contractor</button></div><div class="card"><div class="tw"><table><thead><tr><th>No.</th><th>Project</th><th>Company</th><th>Trade</th><th>Agreed Value</th><th>Progress</th><th>Total Paid</th><th>Deductions</th><th>Balance</th><th></th></tr></thead><tbody id="cont-tb"></tbody></table></div></div></div>
   <div class="pg" id="pg-payments"><div class="ph"><div><div class="pt">Payments</div></div><button class="bp" id="btn-new-payment">+ New Payment</button></div><div class="card"><div class="tw"><table><thead><tr><th>Ref</th><th>Project</th><th>Type</th><th>Payee</th><th>Amount</th><th>Date</th><th>Remarks</th><th>Status</th><th></th></tr></thead><tbody id="pay-tb"></tbody></table></div></div></div>
   <div class="pg" id="pg-approvals"><div class="ph"><div><div class="pt">Approvals</div></div></div><div id="appr-list"></div></div>
+  <div class="pg" id="pg-finance">
+    <div class="ph"><div><div class="pt">Finance</div><div class="ps">Approved payments — mark as paid</div></div></div>
+    <div id="finance-list"></div>
+  </div>
   <div class="pg" id="pg-proj-sheet"><div id="proj-sheet-content"></div></div>
 </div>
 </div>
@@ -200,7 +205,7 @@ input[readonly]{background:var(--bg2);color:var(--text2)}
 <div class="ov" id="mo-contractor"><div class="modal modal-lg"><div class="mh"><span>Register Contractor</span><button id="close-contractor">&#10005;</button></div><div class="mb">
 <div class="fr2"><div class="fg"><label class="fl">Project <span class="req">*</span></label><select id="c-proj"></select></div><div class="fg"><label class="fl">Contractor No.</label><input id="c-num" readonly></div></div>
 <div class="fr2"><div class="fg"><label class="fl">Company Name <span class="req">*</span></label><input id="c-co"></div><div class="fg"><label class="fl">Short Name <span class="req">*</span></label><input id="c-short"></div></div>
-<div class="fr2"><div class="fg"><label class="fl">Trade</label><select id="c-trade"><option>Civil</option><option>Geotechnical</option><option>Structural</option><option>Piling</option><option>Earthworks</option><option>Ground Improvement</option><option>Electrical</option><option>Mechanical</option><option>Other</option></select></div><div class="fg"><label class="fl">Agreed Value (LKR) <span class="req">*</span></label><input id="c-agreed" type="number" min="0" oninput="recalcProg()"></div></div>
+<div class="fr2"><div class="fg"><label class="fl">Trade</label><select id="c-trade"><option>Foundation</option><option>Erection</option><option>Building</option><option>Aluminum</option><option>Excavator</option><option>Labour</option><option>Other</option></select></div><div class="fg"><label class="fl">Agreed Value (LKR) <span class="req">*</span></label><input id="c-agreed" type="number" min="0" oninput="recalcProg()"></div></div>
 <div class="sh">Banking</div>
 <div class="fr2"><div class="fg"><label class="fl">Bank</label><input id="c-bank"></div><div class="fg"><label class="fl">Branch</label><input id="c-branch"></div></div>
 <div class="fr2"><div class="fg"><label class="fl">Account Number</label><input id="c-acct"></div><div class="fg"><label class="fl">VAT Number</label><input id="c-vat"></div></div>
@@ -215,9 +220,19 @@ input[readonly]{background:var(--bg2);color:var(--text2)}
 <div class="step-hdr"><div class="sdot on" id="sdot-1"><div class="scirc">1</div>Project</div><div class="sline"></div><div class="sdot" id="sdot-2"><div class="scirc">2</div>Payee</div><div class="sline"></div><div class="sdot" id="sdot-3"><div class="scirc">3</div>Amount</div></div>
 <div class="pstep on" id="pay-s1"><div class="fg"><label class="fl">Select Project <span class="req">*</span></label><select id="pay-proj-sel"></select></div><div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="bp" onclick="payStep2()">Next &rarr;</button></div></div>
 <div class="pstep" id="pay-s2">
-<div class="fg"><label class="fl">Category <span class="req">*</span></label><select id="pay-cat" onchange="onPayCat()"><option value="">— select —</option><option value="supplier">Supplier</option><option value="contractor">Contractor</option><option value="internal">Internal</option><option value="direct">Direct Cost</option></select></div>
-<div id="pay-payee-wrap" style="display:none"><label class="fl">Payee <span class="req">*</span></label><select id="pay-payee-sel" onchange="onPayeeSelect()"><option value="">— select payee —</option></select></div>
-<div id="pay-int-wrap" style="display:none"><label class="fl">Description <span class="req">*</span></label><input id="pay-int-desc"></div>
+<div class="fg"><label class="fl">Category <span class="req">*</span></label>
+  <select id="pay-cat" onchange="onPayCat()">
+    <option value="">— select category —</option>
+    <option value="supplier_direct">Supplier — Direct Cost</option>
+    <option value="supplier_sub">Supplier — Reduce from Contractor</option>
+    <option value="contractor">Contractor</option>
+    <option value="suspense">Suspense</option>
+    <option value="accommodation">Accommodation</option>
+    <option value="material">Material Transfer</option>
+    <option value="direct">Direct Cost</option>
+  </select>
+</div>
+<div id="pay-dynamic-fields"></div>
 <div id="pay-payee-summary"></div>
 <div style="display:flex;justify-content:space-between;margin-top:8px"><button onclick="goPayStep(1)">&larr; Back</button><button class="bp" onclick="payStep3()">Next &rarr;</button></div>
 </div>
@@ -229,6 +244,32 @@ input[readonly]{background:var(--bg2);color:var(--text2)}
 <div style="display:flex;justify-content:space-between;margin-top:8px"><button onclick="goPayStep(2)">&larr; Back</button><button class="bp" id="save-payment">&#10003; Submit Payment</button></div>
 </div>
 </div></div></div>
+<!-- TRANSFER SUSPENSE MODAL -->
+<div class="ov" id="mo-transfer"><div class="modal" style="width:450px">
+<div class="mh"><span>Transfer Suspense to Contractor</span><button id="close-transfer">&#10005;</button></div>
+<div class="mb">
+  <div class="ibox" id="transfer-info"></div>
+  <div class="fg"><label class="fl">Select Contractor <span class="req">*</span></label><select id="transfer-cont"></select></div>
+  <div class="fg"><label class="fl">Amount to Transfer (LKR) <span class="req">*</span></label><input id="transfer-amt" type="number" min="0"></div>
+  <div class="fg"><label class="fl">Remarks</label><input id="transfer-remarks" placeholder="Transfer reason..."></div>
+</div>
+<div class="mf"><button id="cancel-transfer">Cancel</button><button class="bp" id="save-transfer">&#10003; Transfer</button></div>
+</div></div>
+<!-- PIN MODAL -->
+<div class="ov" id="mo-pin"><div class="modal" style="width:340px">
+<div class="mh"><span id="pin-title">Enter PIN to Approve</span><button id="close-pin">&#10005;</button></div>
+<div class="mb" style="text-align:center;padding:20px">
+  <div style="font-size:13px;color:var(--text2);margin-bottom:16px" id="pin-desc"></div>
+  <div style="display:flex;justify-content:center;gap:10px;margin-bottom:16px">
+    <input id="pin-d1" type="password" maxlength="1" style="width:48px;height:48px;text-align:center;font-size:22px;font-weight:700;border-radius:var(--r);border:1.5px solid var(--border2)" oninput="pinNext(this,'pin-d2')">
+    <input id="pin-d2" type="password" maxlength="1" style="width:48px;height:48px;text-align:center;font-size:22px;font-weight:700;border-radius:var(--r);border:1.5px solid var(--border2)" oninput="pinNext(this,'pin-d3')">
+    <input id="pin-d3" type="password" maxlength="1" style="width:48px;height:48px;text-align:center;font-size:22px;font-weight:700;border-radius:var(--r);border:1.5px solid var(--border2)" oninput="pinNext(this,'pin-d4')">
+    <input id="pin-d4" type="password" maxlength="1" style="width:48px;height:48px;text-align:center;font-size:22px;font-weight:700;border-radius:var(--r);border:1.5px solid var(--border2)" oninput="pinSubmit()">
+  </div>
+  <div id="pin-err" style="color:var(--rd);font-size:12px;min-height:18px"></div>
+</div>
+</div></div>
+
 <!-- DETAIL MODAL -->
 <div class="ov" id="mo-detail"><div class="modal modal-lg"><div class="mh"><span id="detail-title">Details</span><button id="close-detail">&#10005;</button></div><div class="mb" id="detail-body"></div><div class="mf"><button id="close-detail-2">Close</button></div></div></div>
 <div class="toast" id="toast"></div>
@@ -246,9 +287,17 @@ function bdg(s,c){return'<span class="bdg '+(c||'bpur')+'">'+esc(s)+'</span>'}
 function toast(msg,err){var t=G('toast');t.textContent=msg;t.className='toast show'+(err?' err':'');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show')},3000)}
 function clr(ids){ids.forEach(function(id){var e=G(id);if(e)e.value=''})}
 function setSS(status,msg){var d=G('sdot'),l=G('slbl');d.className='sync-dot '+status;l.textContent=msg;l.style.color=status==='ok'?'var(--gr)':status==='err'?'var(--rd)':'var(--am)'}
-function totalPaid(type,id){return payments.filter(function(p){return p.payeeType===type&&String(p.payeeId)===String(id)&&p.status==='Approved'}).reduce(function(a,p){return a+(+p.amount||0)},0)}
-function totalPend(type,id){return payments.filter(function(p){return p.payeeType===type&&String(p.payeeId)===String(id)&&p.status==='Pending'}).reduce(function(a,p){return a+(+p.amount||0)},0)}
-function projPaid(pn,cat){return payments.filter(function(p){return p.project===pn&&p.category===cat&&p.status==='Approved'}).reduce(function(a,p){return a+(+p.amount||0)},0)}
+function pf(fn){return payments.filter(fn).reduce(function(a,p){return a+(+p.amount||0)},0)}
+function totalPaid(type,id){return pf(function(p){return p.payeeType===type&&String(p.payeeId)===String(id)&&p.status==='Approved'})}
+function totalPend(type,id){return pf(function(p){return p.payeeType===type&&String(p.payeeId)===String(id)&&p.status==='Pending'})}
+function suppDirectPaid(id){return pf(function(p){return p.payeeType==='supplier_direct'&&String(p.payeeId)===String(id)&&p.status==='Paid'})}
+function suppSubDed(id){return pf(function(p){return p.payeeType==='supplier_sub'&&String(p.payeeId)===String(id)&&p.status==='Paid'})}
+function contPaid(id){return pf(function(p){return p.payeeType==='contractor'&&String(p.payeeId)===String(id)&&p.status==='Paid'})}
+function contPend(id){return pf(function(p){return p.payeeType==='contractor'&&String(p.payeeId)===String(id)&&p.status==='Pending'})}
+function contDed(id){return pf(function(p){return(p.payeeType==='supplier_sub'||p.payeeType==='material'||p.payeeType==='suspense_transfer')&&String(p.linkedContractorId)===String(id)&&p.status==='Paid'})}
+function projPaid(pn,cat){return pf(function(p){return p.project===pn&&p.payeeType===cat&&p.status==='Paid'})}
+function projTotalCost(pn){return pf(function(p){return p.project===pn&&p.status==='Paid'&&['supplier_direct','contractor','suspense','accommodation','material','direct'].indexOf(p.payeeType)>-1})}
+function suspByPerson(pn){var m={};payments.filter(function(p){return p.project===pn&&p.payeeType==='suspense'&&p.status==='Paid'}).forEach(function(p){if(!m[p.suspenseName])m[p.suspenseName]=0;m[p.suspenseName]+=(+p.amount||0)});return m}
 function cwp(c){var all=(c.progress||[]).concat(c.addWorks||[]);var tv=all.reduce(function(a,r){return a+(+r.schedAmt||0)},0)||+c.agreed||1;var dv=all.reduce(function(a,r){return a+(+r.schedAmt||0)*(Math.min(100,+r.workDone||0)/100)},0);return tv>0?(dv/tv*100):0}
 function ctv(c){return(c.progress||[]).reduce(function(a,r){return a+(+r.schedAmt||0)},0)+(c.addWorks||[]).reduce(function(a,r){return a+(+r.schedAmt||0)},0)}
 // JSONP
@@ -321,35 +370,98 @@ function renderSheet(p){
   var ps=suppliers.filter(function(s){return s.projNum===p.num});
   var pc=contractors.filter(function(c){return c.projNum===p.num});
   var py=payments.filter(function(x){return x.project===p.num});
-  var sc=projPaid(p.num,'supplier'),cc=projPaid(p.num,'contractor'),ic=projPaid(p.num,'internal'),dc=projPaid(p.num,'direct'),tc=sc+cc+ic+dc;
+  var suppCost=pf(function(x){return x.project===p.num&&x.payeeType==='supplier_direct'&&x.status==='Paid'});
+  var contCost=pf(function(x){return x.project===p.num&&x.payeeType==='contractor'&&x.status==='Paid'});
+  var suspCost=pf(function(x){return x.project===p.num&&x.payeeType==='suspense'&&x.status==='Paid'});
+  var accomCost=pf(function(x){return x.project===p.num&&x.payeeType==='accommodation'&&x.status==='Paid'});
+  var matCost=pf(function(x){return x.project===p.num&&x.payeeType==='material'&&x.status==='Paid'});
+  var dirCost=pf(function(x){return x.project===p.num&&x.payeeType==='direct'&&x.status==='Paid'});
+  var tc=suppCost+contCost+suspCost+accomCost+matCost+dirCost;
   var pend=py.filter(function(x){return x.status==='Pending'}).reduce(function(a,x){return a+(+x.amount||0)},0);
+  var suspMap=suspByPerson(p.num);
+
   var h='<div class="bc2"><a onclick="nav(\'projects\',G(\'nav-projects\'))">All Projects</a> &rsaquo; '+esc(p.num)+'</div>';
   h+='<div class="proj-hdr"><div style="font-size:10px;opacity:.7;margin-bottom:3px">'+esc(p.num)+'</div><div style="font-size:18px;font-weight:600;margin-bottom:2px">'+esc(p.short)+'</div><div style="font-size:12px;opacity:.8">'+esc(p.tender)+'</div></div>';
-  h+='<div class="kpi4"><div class="kpi"><div class="kpi-l">Tender Amount</div><div class="kpi-v" style="color:var(--pu);font-size:12px">'+fmt(p.tAmt)+'</div></div><div class="kpi"><div class="kpi-l">Total Cost</div><div class="kpi-v" style="color:var(--rd);font-size:12px">'+fmt(tc)+'</div></div><div class="kpi"><div class="kpi-l">Pending</div><div class="kpi-v" style="color:var(--am);font-size:12px">'+fmt(pend)+'</div></div><div class="kpi"><div class="kpi-l">Margin</div><div class="kpi-v" style="color:var(--gr)">'+(p.margin?p.margin+'%':'—')+'</div></div></div>';
-  h+='<div style="background:var(--bg2);border-radius:var(--rl);padding:12px;margin-bottom:10px">';
-  [['Supplier Costs',sc],['Contractor Costs',cc],['Internal Costs',ic],['Direct Costs',dc]].forEach(function(r){h+='<div class="cost-row"><span style="color:var(--text2)">'+r[0]+'</span><span>'+fmt(r[1])+'</span></div>'});
-  h+='<div class="cost-row"><span>Total</span><span style="color:var(--rd)">'+fmt(tc)+'</span></div></div>';
-  h+='<div class="stabs"><button class="stab on" onclick="sheetTab(this,\'st-ov\')">Overview</button><button class="stab" onclick="sheetTab(this,\'st-pm\')">PM Entry</button><button class="stab" onclick="sheetTab(this,\'st-s\')">Suppliers ('+ps.length+')</button><button class="stab" onclick="sheetTab(this,\'st-c\')">Contractors ('+pc.length+')</button><button class="stab" onclick="sheetTab(this,\'st-p\')">Payments ('+py.length+')</button></div>';
+  h+='<div class="kpi-grid"><div class="kpi"><div class="kpi-l">Tender Amount</div><div class="kpi-v" style="color:var(--pu)">'+fmt(p.tAmt)+'</div></div><div class="kpi"><div class="kpi-l">Total Cost</div><div class="kpi-v" style="color:var(--rd)">'+fmt(tc)+'</div></div><div class="kpi"><div class="kpi-l">Pending</div><div class="kpi-v" style="color:var(--am)">'+fmt(pend)+'</div></div><div class="kpi"><div class="kpi-l">Margin</div><div class="kpi-v" style="color:var(--gr)">'+(p.margin?p.margin+'%':'—')+'</div></div></div>';
+  h+='<div style="background:var(--bg2);border-radius:var(--rl);padding:12px;margin-bottom:10px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Cost Breakdown (Approved)</div>';
+  [['Supplier Direct',suppCost],['Contractors',contCost],['Material',matCost],['Suspense',suspCost],['Accommodation',accomCost],['Direct Cost',dirCost]].forEach(function(r){if(r[1]>0)h+='<div class="cost-row"><span style="color:var(--text2)">'+r[0]+'</span><span>'+fmt(r[1])+'</span></div>'});
+  h+='<div class="cost-row" style="margin-top:4px"><span style="font-weight:600">Total</span><span style="color:var(--rd);font-weight:600">'+fmt(tc)+'</span></div></div>';
+
+  h+='<div class="stabs">';
+  h+='<button class="stab on" onclick="sheetTab(this,\'st-ov\')">Overview</button>';
+  h+='<button class="stab" onclick="sheetTab(this,\'st-pm\')">PM Entry</button>';
+  h+='<button class="stab" onclick="sheetTab(this,\'st-s\')">Suppliers ('+ps.length+')</button>';
+  h+='<button class="stab" onclick="sheetTab(this,\'st-c\')">Contractors ('+pc.length+')</button>';
+  h+='<button class="stab" onclick="sheetTab(this,\'st-susp\')">Suspense</button>';
+  h+='<button class="stab" onclick="sheetTab(this,\'st-accom\')">Accommodation</button>';
+  h+='<button class="stab" onclick="sheetTab(this,\'st-dir\')">Direct Cost</button>';
+  h+='<button class="stab" onclick="sheetTab(this,\'st-pay\')">All Payments ('+py.length+')</button>';
+  h+='</div>';
+
+  // Overview
   h+='<div class="spanel on" id="st-ov"><div class="card"><div class="ch">Details <select class="ssel" style="width:auto" onchange="chgStatus(\''+p.id+'\',this.value)"><option'+(p.status==='Active'?' selected':'')+'>Active</option><option'+(p.status==='Complete'?' selected':'')+'>Complete</option></select></div><div style="padding:8px 12px">';
   [['No.',esc(p.num)],['Short Name',esc(p.short)],['Tender Name',esc(p.tender)],['Tender Amt',fmt(p.tAmt)],['Tax',fmt(p.tax)],['Profit',fmt(p.profit)],['Margin',p.margin?p.margin+'%':'—'],['Start',fd(p.start)],['End',fd(p.end)]].forEach(function(f){h+='<div class="frow"><span class="fkey">'+f[0]+'</span><span>'+f[1]+'</span></div>'});
   h+='</div></div></div>';
+
+  // PM
   h+='<div class="spanel" id="st-pm">';
-  if(pm){var dM=(+pm.marginEst||0)-(parseFloat(p.margin)||0),col=dM>=0?'var(--gr)':'var(--rd)';h+='<div class="card"><div class="ch">PM Estimates</div><div style="padding:8px 12px">';[['Cost Est.',fmt(pm.cost)],['OH Est.',fmt(pm.oh)],['Profit Est.',fmt(pm.profitEst)],['Margin Est.',(+pm.marginEst||0).toFixed(2)+'%'],['vs Tender','<span style="color:'+col+';font-weight:600">'+(dM>=0?'+':'')+dM.toFixed(2)+'%</span>']].forEach(function(f){h+='<div class="frow"><span class="fkey">'+f[0]+'</span><span>'+f[1]+'</span></div>'});h+='</div></div>';}
+  if(pm){var dM=(+pm.marginEst||0)-(parseFloat(p.margin)||0),col=dM>=0?'var(--gr)':'var(--rd)';h+='<div class="card"><div class="ch">PM Estimates <span style="font-size:11px;color:var(--text3);font-weight:400">'+pm.date+'</span></div><div style="padding:8px 12px">';[['Cost Est.',fmt(pm.cost)],['OH Est.',fmt(pm.oh)],['Profit Est.',fmt(pm.profitEst)],['Margin Est.',(+pm.marginEst||0).toFixed(2)+'%'],['vs Tender','<span style="color:'+col+';font-weight:600">'+(dM>=0?'+':'')+dM.toFixed(2)+'%</span>']].forEach(function(f){h+='<div class="frow"><span class="fkey">'+f[0]+'</span><span>'+f[1]+'</span></div>'});h+='</div></div>';}
   else{h+='<div class="card"><div style="text-align:center;padding:24px"><div style="font-size:12px;color:var(--text3);margin-bottom:12px">No PM entry yet.</div><button class="bpm" onclick="openPMFor(\''+p.id+'\')">+ Add PM Entry</button></div></div>';}
   h+='</div>';
-  h+='<div class="spanel" id="st-s"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text2)">Supplier cost: <strong>'+fmt(sc)+'</strong></span><button class="bp" onclick="openSupplierFor(\''+esc(p.num)+'\')">+ Add</button></div>';
-  if(ps.length){h+='<div class="card"><div class="tw"><table><thead><tr><th>No.</th><th>Company</th><th>Bank/Account</th><th>VAT</th><th>Paid</th><th>Pending</th></tr></thead><tbody>'+ps.map(function(s){return'<tr><td>'+bdg(s.num,'bc')+'</td><td><span class="clink" onclick="viewSupplier(\''+s.id+'\')">'+esc(s.company)+'</span></td><td style="font-size:11px">'+esc(s.bank||'—')+'/'+esc(s.acct||'—')+'</td><td style="font-size:11px">'+esc(s.vat||'—')+'</td><td style="color:var(--gr);font-weight:500">'+fmt(totalPaid('supplier',s.id))+'</td><td style="color:var(--am)">'+fmt(totalPend('supplier',s.id))+'</td></tr>'}).join('')+'</tbody></table></div></div>';}
+
+  // Suppliers
+  h+='<div class="spanel" id="st-s"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text2)">Direct cost: <strong>'+fmt(suppCost)+'</strong></span><button class="bp" onclick="openSupplierFor(\''+esc(p.num)+'\')">+ Add</button></div>';
+  if(ps.length){h+='<div class="card"><div class="tw"><table><thead><tr><th>No.</th><th>Company</th><th>Bank/Account</th><th>Direct Paid</th><th>Sub Deducted</th><th></th></tr></thead><tbody>';ps.forEach(function(s){var dp=suppDirectPaid(s.id),sd=suppSubDed(s.id);var hasPay=payments.some(function(py){return(py.payeeType==='supplier_direct'||py.payeeType==='supplier_sub')&&String(py.payeeId)===String(s.id)});h+='<tr><td>'+bdg(s.num,'bc')+'</td><td><span class="clink" onclick="viewSupplier(\''+s.id+'\')">'+esc(s.company)+'</span></td><td style="font-size:11px">'+esc(s.bank||'—')+'/'+esc(s.acct||'—')+'</td><td style="color:var(--gr);font-weight:500">'+fmt(dp)+'</td><td style="color:var(--am)">'+fmt(sd)+'</td><td>'+(hasPay?'':'<button class="bdel" onclick="delSupplier(\''+s.id+'\')">&#128465;</button>')+'</td></tr>';});h+='</tbody></table></div></div>';}
   else{h+='<div class="card"><div class="empty">No suppliers yet.</div></div>';}
   h+='</div>';
-  h+='<div class="spanel" id="st-c"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text2)">Contractor cost: <strong>'+fmt(cc)+'</strong></span><button class="bp" onclick="openContractorFor(\''+esc(p.num)+'\')">+ Add</button></div>';
-  if(pc.length){var cBdg={supplier:'ba',contractor:'bpur',internal:'bc',direct:'bpend'};h+='<div class="card"><div class="tw"><table><thead><tr><th>No.</th><th>Company</th><th>Trade</th><th>Agreed</th><th>Progress</th><th>Paid</th><th>Balance</th></tr></thead><tbody>'+pc.map(function(ct){var tv=ctv(ct)||+ct.agreed||0,wp=cwp(ct),paid=totalPaid('contractor',ct.id),bal=tv*(wp/100)-paid;return'<tr><td>'+bdg(ct.num,'bpend')+'</td><td><span class="clink" onclick="viewContractor(\''+ct.id+'\')">'+esc(ct.company)+'</span></td><td>'+esc(ct.trade)+'</td><td>'+fmt(ct.agreed)+'</td><td><span style="font-weight:600;color:var(--pu)">'+wp.toFixed(1)+'%</span></td><td style="color:var(--gr);font-weight:500">'+fmt(paid)+'</td><td style="font-weight:500;color:'+(bal>=0?'var(--gr)':'var(--rd)')+'">'+fmt(bal)+'</td></tr>'}).join('')+'</tbody></table></div></div>';}
+
+  // Contractors
+  h+='<div class="spanel" id="st-c"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text2)">Contractor cost: <strong>'+fmt(contCost)+'</strong></span><button class="bp" onclick="openContractorFor(\''+esc(p.num)+'\')">+ Add</button></div>';
+  if(pc.length){h+='<div class="card"><div class="tw"><table><thead><tr><th>No.</th><th>Company</th><th>Trade</th><th>Agreed</th><th>Progress</th><th>Paid</th><th>Deductions</th><th>Balance</th><th></th></tr></thead><tbody>';pc.forEach(function(ct){var tv=ctv(ct)||+ct.agreed||0,wp=cwp(ct),paid=contPaid(ct.id),ded=contDed(ct.id),bal=tv*(wp/100)-paid-contPend(ct.id)-ded;var hasProg=ct.progress&&ct.progress.some(function(r){return r.workDone>0});var hasPay=payments.some(function(py){return py.payeeType==='contractor'&&String(py.payeeId)===String(ct.id)});h+='<tr><td>'+bdg(ct.num,'bpend')+'</td><td><span class="clink" onclick="viewContractor(\''+ct.id+'\')">'+esc(ct.company)+'</span></td><td>'+esc(ct.trade)+'</td><td>'+fmt(ct.agreed)+'</td><td><span style="font-weight:600;color:var(--pu)">'+wp.toFixed(1)+'%</span></td><td style="color:var(--gr);font-weight:500">'+fmt(paid)+'</td><td style="color:var(--am)">'+fmt(ded)+'</td><td style="font-weight:500;color:'+(bal>=0?'var(--gr)':'var(--rd)')+'">'+fmt(bal)+'</td><td>'+(hasProg||hasPay?'':'<button class="bdel" onclick="delContractor(\''+ct.id+'\')">&#128465;</button>')+'</td></tr>';});h+='</tbody></table></div></div>';}
   else{h+='<div class="card"><div class="empty">No contractors yet.</div></div>';}
   h+='</div>';
-  var cL={supplier:'Supplier',contractor:'Contractor',internal:'Internal',direct:'Direct Cost'};
-  h+='<div class="spanel" id="st-p"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text2)">Total cost: <strong>'+fmt(tc)+'</strong></span><button class="bp" onclick="openPayModal(\''+esc(p.num)+'\')">+ Add Payment</button></div>';
-  if(py.length){var cBdg2={supplier:'ba',contractor:'bpur',internal:'bc',direct:'bpend'};h+='<div class="card"><div class="tw"><table><thead><tr><th>Ref</th><th>Category</th><th>Payee</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>'+py.map(function(x){return'<tr><td style="font-size:11px;color:var(--text2)">'+esc(x.ref)+'</td><td>'+bdg(cL[x.category]||x.category,cBdg2[x.category])+'</td><td>'+esc(x.payeeName)+'</td><td style="font-weight:500">'+fmt(x.amount)+'</td><td>'+fd(x.date)+'</td><td>'+bdg(x.status,x.status==='Approved'?'ba':'bpend')+'</td></tr>'}).join('')+'</tbody></table></div></div>';}
+
+  // Suspense
+  h+='<div class="spanel" id="st-susp"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text2)">Total suspense: <strong>'+fmt(suspCost)+'</strong></span><button class="bp" onclick="openPayModal(\''+esc(p.num)+'\',\'suspense\')">+ Add Suspense</button></div>';
+  if(Object.keys(suspMap).length){
+    h+='<div class="card">';
+    Object.keys(suspMap).forEach(function(name){
+      var amt=suspMap[name];
+      var transfers=pf(function(x){return x.project===p.num&&x.payeeType==='suspense_transfer'&&x.suspenseName===name&&x.status==='Approved'});
+      var remaining=amt-transfers;
+      h+='<div style="padding:10px 12px;border-bottom:.5px solid var(--border)">';
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:600;font-size:13px">'+esc(name)+'</span><button class="bsm" style="font-size:11px" onclick="openTransfer(\''+esc(p.num)+'\',\''+esc(name)+'\','+remaining+')">&#8594; Transfer to Contractor</button></div>';
+      h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div class="kpi"><div class="kpi-l">Total Suspense</div><div class="kpi-v" style="color:var(--am)">'+fmt(amt)+'</div></div><div class="kpi"><div class="kpi-l">Transferred</div><div class="kpi-v" style="color:var(--gr)">'+fmt(transfers)+'</div></div><div class="kpi"><div class="kpi-l">Remaining</div><div class="kpi-v" style="color:var(--rd)">'+fmt(remaining)+'</div></div></div>';
+      var pp=py.filter(function(x){return(x.payeeType==='suspense'||x.payeeType==='suspense_transfer')&&x.suspenseName===name});
+      if(pp.length){h+='<div class="prog-wrap" style="margin-top:8px"><table class="prog-tbl"><thead><tr><th>Ref</th><th>Type</th><th>Amount</th><th>Date</th><th>Remarks</th></tr></thead><tbody>';pp.forEach(function(x){h+='<tr><td style="font-size:11px;color:var(--text2)">'+esc(x.ref)+'</td><td>'+bdg(x.payeeType==='suspense_transfer'?'Transfer':'Suspense',x.payeeType==='suspense_transfer'?'bc':'bpend')+'</td><td style="font-weight:500">'+fmt(x.amount)+'</td><td>'+fd(x.date)+'</td><td>'+esc(x.remarks)+'</td></tr>'});h+='</tbody></table></div>';}
+      h+='</div>';
+    });
+    h+='</div>';
+  } else{h+='<div class="card"><div class="empty">No suspense entries yet.</div></div>';}
+  h+='</div>';
+
+  // Accommodation
+  h+='<div class="spanel" id="st-accom"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text2)">Total: <strong>'+fmt(accomCost)+'</strong></span><button class="bp" onclick="openPayModal(\''+esc(p.num)+'\',\'accommodation\')">+ Add</button></div>';
+  var accomPay=py.filter(function(x){return x.payeeType==='accommodation'});
+  if(accomPay.length){h+='<div class="card"><div class="tw"><table><thead><tr><th>Ref</th><th>Amount</th><th>Date</th><th>Remarks</th><th>Status</th></tr></thead><tbody>'+accomPay.map(function(x){return'<tr><td style="font-size:11px;color:var(--text2)">'+esc(x.ref)+'</td><td style="font-weight:500">'+fmt(x.amount)+'</td><td>'+fd(x.date)+'</td><td>'+esc(x.remarks)+'</td><td>'+bdg(x.status,x.status==='Approved'?'ba':'bpend')+'</td></tr>'}).join('')+'</tbody></table></div></div>';}
+  else{h+='<div class="card"><div class="empty">No accommodation entries yet.</div></div>';}
+  h+='</div>';
+
+  // Direct Cost
+  h+='<div class="spanel" id="st-dir"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text2)">Total: <strong>'+fmt(dirCost)+'</strong></span><button class="bp" onclick="openPayModal(\''+esc(p.num)+'\',\'direct\')">+ Add</button></div>';
+  var dirPay=py.filter(function(x){return x.payeeType==='direct'});
+  if(dirPay.length){h+='<div class="card"><div class="tw"><table><thead><tr><th>Ref</th><th>Amount</th><th>Date</th><th>Remarks</th><th>Status</th></tr></thead><tbody>'+dirPay.map(function(x){return'<tr><td style="font-size:11px;color:var(--text2)">'+esc(x.ref)+'</td><td style="font-weight:500">'+fmt(x.amount)+'</td><td>'+fd(x.date)+'</td><td>'+esc(x.remarks)+'</td><td>'+bdg(x.status,x.status==='Approved'?'ba':'bpend')+'</td></tr>'}).join('')+'</tbody></table></div></div>';}
+  else{h+='<div class="card"><div class="empty">No direct cost entries yet.</div></div>';}
+  h+='</div>';
+
+  // All Payments
+  var cL={'supplier_direct':'Supp Direct','supplier_sub':'Supp to Sub','contractor':'Contractor','suspense':'Suspense','suspense_transfer':'Susp Trf','accommodation':'Accommodation','material':'Material','direct':'Direct Cost'};
+  var cC={'supplier_direct':'ba','supplier_sub':'bc','contractor':'bpur','suspense':'bpend','suspense_transfer':'bc','accommodation':'bc','material':'bred','direct':'bpend'};
+  h+='<div class="spanel" id="st-pay"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text2)">All transactions</span><button class="bp" onclick="openPayModal(\''+esc(p.num)+'\',\'\')">+ Add Payment</button></div>';
+  if(py.length){h+='<div class="card"><div class="tw"><table><thead><tr><th>Ref</th><th>Category</th><th>Payee</th><th>Amount</th><th>Date</th><th>Remarks</th><th>Status</th></tr></thead><tbody>'+py.map(function(x){return'<tr><td style="font-size:11px;color:var(--text2)">'+esc(x.ref)+'</td><td>'+bdg(cL[x.payeeType]||x.payeeType,cC[x.payeeType]||'bpur')+'</td><td>'+esc(x.payeeName||'—')+'</td><td style="font-weight:500">'+fmt(x.amount)+'</td><td>'+fd(x.date)+'</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(x.remarks)+'</td><td>'+bdg(x.status,x.status==='Approved'?'ba':'bpend')+'</td></tr>'}).join('')+'</tbody></table></div></div>';}
   else{h+='<div class="card"><div class="empty">No payments yet.</div></div>';}
   h+='</div>';
+
   G('proj-sheet-content').innerHTML=h;
 }
 function chgStatus(id,val){var p=projects.find(function(x){return String(x.id)===String(id)});if(!p)return;p.status=val;apiUF('projects',id,'status',val).then(function(){refreshNav();renderProjects();renderSheet(p);toast('Status updated')})}
@@ -489,11 +601,47 @@ function openPayModal(preProj){
 function payStep2(){var proj=G('pay-proj-sel').value;if(!proj){toast('Select a project');return}payState.proj=proj;G('pay-cat').value='';G('pay-payee-wrap').style.display='none';G('pay-int-wrap').style.display='none';G('pay-payee-summary').innerHTML='';goPayStep(2)}
 function onPayCat(){
   var cat=G('pay-cat').value,pn=payState.proj;
-  G('pay-payee-wrap').style.display='none';G('pay-int-wrap').style.display='none';G('pay-payee-summary').innerHTML='';payState.cat=cat;payState.payeeId=null;payState.payeeName=null;
-  if(cat==='supplier'){var l=suppliers.filter(function(s){return s.projNum===pn});var sel=G('pay-payee-sel');sel.innerHTML='<option value="">— select —</option>';l.forEach(function(s){sel.innerHTML+='<option value="'+s.id+'">'+esc(s.num)+' — '+esc(s.company)+'</option>'});G('pay-payee-wrap').style.display='block';}
-  else if(cat==='contractor'){var l2=contractors.filter(function(c){return c.projNum===pn});var sel2=G('pay-payee-sel');sel2.innerHTML='<option value="">— select —</option>';l2.forEach(function(c){sel2.innerHTML+='<option value="'+c.id+'">'+esc(c.num)+' — '+esc(c.company)+'</option>'});G('pay-payee-wrap').style.display='block';}
-  else if(cat==='internal'||cat==='direct'){G('pay-int-wrap').style.display='block';payState.payeeName=cat==='internal'?'Internal':'Direct Cost';payState.payeeType=cat;}
+  var df=G('pay-dynamic-fields');if(df)df.innerHTML='';
+  G('pay-payee-summary').innerHTML='';
+  payState.cat=cat;payState.payeeId=null;payState.payeeName=null;payState.suspenseName=null;payState.linkedContractorId=null;
+  if(!df)return;
+  var h='';
+  if(cat==='supplier_direct'||cat==='supplier_sub'){
+    var sl=suppliers.filter(function(s){return s.projNum===pn});
+    h+='<div class="fg" style="margin-top:8px"><label class="fl">Supplier <span class="req">*</span></label><select id="dyn-sup" onchange="onDynSup()"><option value="">— select —</option>';
+    sl.forEach(function(s){h+='<option value="'+s.id+'">'+esc(s.num)+' — '+esc(s.company)+'</option>'});
+    h+='</select></div>';
+    if(cat==='supplier_sub'){
+      h+='<div class="fg"><label class="fl">Deduct from Contractor <span class="req">*</span></label><select id="dyn-sub-cont"><option value="">— select contractor —</option>';
+      contractors.filter(function(c){return c.projNum===pn}).forEach(function(c){h+='<option value="'+c.id+'">'+esc(c.num)+' — '+esc(c.company)+'</option>'});
+      h+='</select></div>';
+    }
+    df.innerHTML=h;
+  } else if(cat==='contractor'){
+    var cl=contractors.filter(function(c){return c.projNum===pn});
+    h='<div class="fg" style="margin-top:8px"><label class="fl">Contractor <span class="req">*</span></label><select id="dyn-cont" onchange="onDynCont()"><option value="">— select —</option>';
+    cl.forEach(function(c){h+='<option value="'+c.id+'">'+esc(c.num)+' — '+esc(c.company)+'</option>'});
+    h+='</select></div>';df.innerHTML=h;
+  } else if(cat==='suspense'){
+    var snames=Object.keys(suspByPerson(pn));
+    h='<div class="fg" style="margin-top:8px"><label class="fl">Person Name <span class="req">*</span></label><input id="dyn-susp-name" placeholder="e.g. Amal, Nimal..." list="susp-dl"><datalist id="susp-dl">';
+    snames.forEach(function(n){h+='<option value="'+esc(n)+'">'});
+    h+='</datalist></div>';df.innerHTML=h;payState.payeeName='Suspense';
+  } else if(cat==='accommodation'){
+    df.innerHTML='<div class="fg" style="margin-top:8px"><label class="fl">Description <span class="req">*</span></label><input id="dyn-accom" placeholder="e.g. Hotel, site accommodation..."></div>';
+    payState.payeeName='Accommodation';
+  } else if(cat==='material'){
+    h='<div class="fg" style="margin-top:8px"><label class="fl">Material Description <span class="req">*</span></label><input id="dyn-mat-desc" placeholder="e.g. Steel, Cement..."></div>';
+    h+='<div class="fg"><label class="fl">Link to Contractor <span class="req">*</span></label><select id="dyn-mat-cont"><option value="">— select contractor —</option>';
+    contractors.filter(function(c){return c.projNum===pn}).forEach(function(c){h+='<option value="'+c.id+'">'+esc(c.num)+' — '+esc(c.company)+'</option>'});
+    h+='</select></div>';df.innerHTML=h;
+  } else if(cat==='direct'){
+    df.innerHTML='<div class="fg" style="margin-top:8px"><label class="fl">Description <span class="req">*</span></label><input id="dyn-dir-desc" placeholder="e.g. Equipment hire, transport..."></div>';
+    payState.payeeName='Direct Cost';
+  }
 }
+function onDynSup(){var id=G('dyn-sup')?G('dyn-sup').value:'';if(!id)return;var s=suppliers.find(function(x){return String(x.id)===String(id)});if(!s)return;payState.payeeId=id;payState.payeeName=s.company;var dp=suppDirectPaid(id),sd=suppSubDed(id);G('pay-payee-summary').innerHTML='<div class="payee-card"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div class="kpi"><div class="kpi-l">Direct Paid</div><div class="kpi-v" style="color:var(--gr)">'+fmt(dp)+'</div></div><div class="kpi"><div class="kpi-l">Sub Deducted</div><div class="kpi-v" style="color:var(--am)">'+fmt(sd)+'</div></div><div class="kpi"><div class="kpi-l">Bank/Account</div><div class="kpi-v" style="font-size:11px">'+esc(s.bank||'—')+'/'+esc(s.acct||'—')+'</div></div></div></div>';}
+function onDynCont(){var id=G('dyn-cont')?G('dyn-cont').value:'';if(!id)return;var c=contractors.find(function(x){return String(x.id)===String(id)});if(!c)return;payState.payeeId=id;payState.payeeName=c.company;var wp=cwp(c),tv=ctv(c)||+c.agreed||0,da=tv*(wp/100),paid=contPaid(id),pend=contPend(id),ded=contDed(id),bal=da-paid-pend-ded;G('pay-payee-summary').innerHTML='<div class="payee-card"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div class="kpi"><div class="kpi-l">Agreed</div><div class="kpi-v" style="color:var(--pu)">'+fmt(c.agreed)+'</div></div><div class="kpi"><div class="kpi-l">Progress</div><div class="kpi-v" style="color:var(--put)">'+wp.toFixed(1)+'%</div></div><div class="kpi"><div class="kpi-l">Work Done</div><div class="kpi-v" style="color:var(--put)">'+fmt(da)+'</div></div><div class="kpi"><div class="kpi-l">Paid</div><div class="kpi-v" style="color:var(--gr)">'+fmt(paid)+'</div></div><div class="kpi"><div class="kpi-l">Deductions</div><div class="kpi-v" style="color:var(--am)">'+fmt(ded)+'</div></div><div class="kpi"><div class="kpi-l">Balance</div><div class="kpi-v" style="color:'+(bal>=0?'var(--gr)':'var(--rd)')+'">'+fmt(bal)+'</div></div></div></div>';}
 function onPayeeSelect(){
   var cat=G('pay-cat').value,id=parseInt(G('pay-payee-sel').value);G('pay-payee-summary').innerHTML='';if(!id)return;payState.payeeId=id;
   if(cat==='supplier'){var s=suppliers.find(function(x){return x.id==id});if(!s)return;payState.payeeName=s.company;payState.payeeType='supplier';var paid=totalPaid('supplier',id),pend=totalPend('supplier',id);G('pay-payee-summary').innerHTML='<div class="payee-card"><div class="pk4"><div class="pk"><div class="pk-l">Total Paid</div><div class="pk-v" style="color:var(--gr)">'+fmt(paid)+'</div></div><div class="pk"><div class="pk-l">Pending</div><div class="pk-v" style="color:var(--am)">'+fmt(pend)+'</div></div><div class="pk"><div class="pk-l">Total</div><div class="pk-v" style="color:var(--pu)">'+fmt(paid+pend)+'</div></div></div><div class="bank-row"><div class="bank-item"><div class="bl">Bank</div><div class="bv">'+esc(s.bank||'—')+'</div></div><div class="bank-item"><div class="bl">Account</div><div class="bv">'+esc(s.acct||'—')+'</div></div></div></div>';}
@@ -501,22 +649,26 @@ function onPayeeSelect(){
 }
 function payStep3(){
   var cat=G('pay-cat').value;if(!cat){toast('Select a category');return}
-  if((cat==='supplier'||cat==='contractor')&&!payState.payeeId){toast('Select a payee');return}
-  if((cat==='internal'||cat==='direct')&&!G('pay-int-desc').value.trim()){toast('Enter description');return}
-  if(cat==='internal'||cat==='direct')payState.payeeName=G('pay-int-desc').value.trim();
+  payState.cat=cat;
+  if(cat==='supplier_direct'||cat==='supplier_sub'){if(!payState.payeeId){toast('Select a supplier');return}if(cat==='supplier_sub'){var dc=G('dyn-sub-cont');if(!dc||!dc.value){toast('Select contractor to deduct from');return}payState.linkedContractorId=dc.value;}}
+  else if(cat==='contractor'){if(!payState.payeeId){toast('Select a contractor');return}}
+  else if(cat==='suspense'){var sn=G('dyn-susp-name')?G('dyn-susp-name').value.trim():'';if(!sn){toast('Enter person name');return}payState.suspenseName=sn;payState.payeeName='Suspense — '+sn;}
+  else if(cat==='accommodation'){var ad=G('dyn-accom')?G('dyn-accom').value.trim():'';if(!ad){toast('Enter description');return}payState.payeeName='Accommodation: '+ad;}
+  else if(cat==='material'){var md=G('dyn-mat-desc')?G('dyn-mat-desc').value.trim():'',mc=G('dyn-mat-cont')?G('dyn-mat-cont').value:'';if(!md||!mc){toast('Enter description and select contractor');return}payState.linkedContractorId=mc;var mct=contractors.find(function(x){return String(x.id)===String(mc)});payState.payeeName='Material: '+md+(mct?' to '+mct.company:'');}
+  else if(cat==='direct'){var dd=G('dyn-dir-desc')?G('dyn-dir-desc').value.trim():'';if(!dd){toast('Enter description');return}payState.payeeName='Direct: '+dd;}
   G('pay-date').value=G('pay-date').value||new Date().toISOString().split('T')[0];
-  var cL={supplier:'Supplier',contractor:'Contractor',internal:'Internal',direct:'Direct Cost'};
-  G('pay-s3-info').innerHTML='Project: <strong>'+esc(payState.proj)+'</strong> &middot; '+cL[cat]+' &middot; <strong>'+esc(payState.payeeName)+'</strong>';
+  var cN={'supplier_direct':'Supplier Direct','supplier_sub':'Supplier to Sub','contractor':'Contractor','suspense':'Suspense','accommodation':'Accommodation','material':'Material Transfer','direct':'Direct Cost'};
+  G('pay-s3-info').innerHTML='Project: <strong>'+esc(payState.proj)+'</strong> &middot; <strong>'+(cN[cat]||cat)+'</strong> &middot; <strong>'+esc(payState.payeeName||'')+'</strong>';
   goPayStep(3);
 }
 G('save-payment').addEventListener('click',function(){
   var amt=parseFloat(G('pay-amount').value)||0,rem=G('pay-remarks').value.trim();
   if(!amt||!rem){toast('Amount and remarks required');return}
-  var cat=G('pay-cat').value;
+  var cat=payState.cat;
   var ref='PAY-'+new Date().getFullYear()+'-'+String(payments.length+1).padStart(3,'0');
-  var py={id:Date.now(),ref:ref,project:payState.proj,category:cat,payeeId:payState.payeeId||'',payeeName:payState.payeeName,payeeType:payState.payeeType||cat,amount:amt,date:G('pay-date').value,refNo:G('pay-ref-no').value,remarks:rem,status:'Pending'};
+  var py={id:Date.now(),ref:ref,project:payState.proj,payeeType:cat,payeeId:payState.payeeId||'',payeeName:payState.payeeName||'',linkedContractorId:payState.linkedContractorId||'',suspenseName:payState.suspenseName||'',amount:amt,date:G('pay-date').value,refNo:G('pay-ref-no').value,remarks:rem,status:'Pending'};
   payments.push(py);
-  apiSave('save_payment',py).then(function(){closeModal('mo-payment');toast('Payment submitted');renderPayments();renderDash();renderSuppliers();renderContractors();if(currentSheetId){var cp=projects.find(function(x){return String(x.id)===String(currentSheetId)});if(cp)renderSheet(cp);}});
+  apiSave('save_payment',py).then(function(){closeModal('mo-payment');toast('Payment submitted for approval');renderPayments();renderDash();renderSuppliers();renderContractors();if(currentSheetId){var cp=projects.find(function(x){return String(x.id)===String(currentSheetId)});if(cp)renderSheet(cp);}});
 });
 G('btn-new-payment').addEventListener('click',function(){openPayModal(null)});
 G('close-payment').addEventListener('click',function(){closeModal('mo-payment')});
@@ -584,12 +736,37 @@ function bpr(list){return list.map(function(p){var hPM=pmEntries.find(function(e
 function renderProjects(){var a=projects.filter(function(p){return p.status==='Active'}),c=projects.filter(function(p){return p.status==='Complete'});G('active-count').textContent=a.length;G('complete-count').textContent=c.length;G('proj-active-tb').innerHTML=a.length?bpr(a):'<tr><td colspan="10"><div class="empty">No active projects</div></td></tr>';G('proj-complete-tb').innerHTML=c.length?bpr(c):'<tr><td colspan="10"><div class="empty">No completed projects</div></td></tr>'}
 function delProj(id){if(!confirm('Remove this project?'))return;projects=projects.filter(function(p){return String(p.id)!==String(id)});pmEntries=pmEntries.filter(function(e){return String(e.projId)!==String(id)});gasPost({action:'delete_record',table:'projects',id:id});refreshNav();renderProjects();renderPM();renderDash();toast('Removed')}
 function renderPM(){var tb=G('pm-tb');if(!pmEntries.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">No PM entries yet</div></td></tr>';return}tb.innerHTML=pmEntries.map(function(e){var proj=projects.find(function(p){return String(p.id)===String(e.projId)});var tM=proj?parseFloat(proj.margin)||0:0,diff=(+e.marginEst||0)-tM,col=diff>=0?'var(--gr)':'var(--rd)';return'<tr><td>'+bdg(e.projNum,'bpur')+'</td><td>'+esc(e.projName)+'</td><td>'+fmt(e.cost)+'</td><td>'+fmt(e.oh)+'</td><td>'+fmt(e.profitEst)+'</td><td>'+(+e.marginEst||0).toFixed(2)+'%</td><td style="font-weight:500;color:'+col+'">'+(diff>=0?'+':'')+diff.toFixed(2)+'%</td><td style="font-size:11px;color:var(--text3)">'+e.date+'</td></tr>'}).join('')}
-function renderSuppliers(){var tb=G('supp-tb');if(!suppliers.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">No suppliers yet</div></td></tr>';return}tb.innerHTML=suppliers.map(function(s){var paid=totalPaid('supplier',s.id);return'<tr><td>'+bdg(s.num,'bc')+'</td><td style="font-size:11px;color:var(--text2)">'+esc(s.projNum)+'</td><td><span class="clink" onclick="viewSupplier(\''+s.id+'\')">'+esc(s.company)+'</span></td><td>'+esc(s.short)+'</td><td style="font-size:11px">'+esc(s.vat||'—')+'</td><td>'+esc(s.phone||'—')+'</td><td style="font-weight:500;color:var(--gr)">'+fmt(paid)+'</td><td><button onclick="viewSupplier(\''+s.id+'\')" style="padding:3px 6px;font-size:11px">&#128065;</button></td></tr>'}).join('')}
-function renderContractors(){var tb=G('cont-tb');if(!contractors.length){tb.innerHTML='<tr><td colspan="9"><div class="empty">No contractors yet</div></td></tr>';return}tb.innerHTML=contractors.map(function(c){var tv=ctv(c)||+c.agreed||0,wp=cwp(c),paid=totalPaid('contractor',c.id),pend=totalPend('contractor',c.id),bal=tv*(wp/100)-paid-pend;return'<tr><td>'+bdg(c.num,'bpend')+'</td><td style="font-size:11px;color:var(--text2)">'+esc(c.projNum)+'</td><td><span class="clink" onclick="viewContractor(\''+c.id+'\')">'+esc(c.company)+'</span></td><td>'+esc(c.trade)+'</td><td>'+fmt(c.agreed)+'</td><td><span style="font-weight:600;color:var(--pu)">'+wp.toFixed(1)+'%</span></td><td style="color:var(--gr);font-weight:500">'+fmt(paid)+'</td><td style="font-weight:500;color:'+(bal>=0?'var(--gr)':'var(--rd)')+'">'+fmt(bal)+'</td><td><button onclick="viewContractor(\''+c.id+'\')" style="padding:3px 6px;font-size:11px">&#128065;</button></td></tr>'}).join('')}
-function renderPayments(){var tb=G('pay-tb');if(!payments.length){tb.innerHTML='<tr><td colspan="9"><div class="empty">No payments yet</div></td></tr>';return}var cL={supplier:'Supplier',contractor:'Contractor',internal:'Internal',direct:'Direct Cost'},cC={supplier:'ba',contractor:'bpur',internal:'bc',direct:'bpend'};tb.innerHTML=payments.map(function(p){return'<tr><td style="font-size:11px;color:var(--text2)">'+esc(p.ref)+'</td><td>'+esc(p.project)+'</td><td>'+bdg(cL[p.category]||p.category,cC[p.category])+'</td><td>'+esc(p.payeeName)+'</td><td style="font-weight:500">'+fmt(p.amount)+'</td><td>'+fd(p.date)+'</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.remarks)+'</td><td>'+bdg(p.status,p.status==='Approved'?'ba':'bpend')+'</td><td><button onclick="approveOne(\''+p.id+'\')" style="padding:3px 6px;font-size:11px">&#128065;</button></td></tr>'}).join('')}
-function approveOne(id){var p=payments.find(function(x){return String(x.id)===String(id)});if(p&&p.status==='Pending'&&confirm('Approve '+fmt(p.amount)+' to '+p.payeeName+'?')){p.status='Approved';apiUF('payments',id,'status','Approved').then(function(){toast('Approved');renderPayments();renderApprovals();renderDash();renderSuppliers();renderContractors();if(currentSheetId){var cp=projects.find(function(x){return String(x.id)===String(currentSheetId)});if(cp)renderSheet(cp);}})}}
-function renderApprovals(){var pend=payments.filter(function(p){return p.status==='Pending'});var el=G('appr-list');var cL={supplier:'Supplier',contractor:'Contractor',internal:'Internal',direct:'Direct Cost'};if(!pend.length){el.innerHTML='<div class="card"><div class="empty">No pending approvals</div></div>';return}el.innerHTML=pend.map(function(p){return'<div class="card" style="margin-bottom:8px"><div class="ch"><span><strong>'+esc(p.ref)+'</strong> — '+esc(p.payeeName)+'</span>'+bdg(p.status,'bpend')+'</div><div style="padding:10px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:12px"><div><div style="color:var(--text3);font-size:10px">Project</div>'+esc(p.project)+'</div><div><div style="color:var(--text3);font-size:10px">Category</div>'+esc(cL[p.category]||p.category)+'</div><div><div style="color:var(--text3);font-size:10px">Amount</div><strong style="color:var(--gr)">'+fmt(p.amount)+'</strong></div><div><div style="color:var(--text3);font-size:10px">Remarks</div>'+esc(p.remarks)+'</div></div><div style="padding:8px 12px;border-top:.5px solid var(--border);display:flex;gap:6px;justify-content:flex-end"><button class="bno" onclick="doAppr(\''+p.id+'\',false)">&#10005; Reject</button><button class="bok" onclick="doAppr(\''+p.id+'\',true)">&#10003; Approve</button></div></div>'}).join('')}
-function doAppr(id,ok){var p=payments.find(function(x){return String(x.id)===String(id)});if(!p)return;p.status=ok?'Approved':'Rejected';apiUF('payments',id,'status',p.status).then(function(){toast(ok?'Approved':'Rejected');renderApprovals();renderPayments();renderDash();renderSuppliers();renderContractors();if(currentSheetId){var cp=projects.find(function(x){return String(x.id)===String(currentSheetId)});if(cp)renderSheet(cp);}});}
+function renderSuppliers(){var tb=G('supp-tb');if(!suppliers.length){tb.innerHTML='<tr><td colspan="9"><div class="empty">No suppliers yet</div></td></tr>';return}tb.innerHTML=suppliers.map(function(s){var dp=suppDirectPaid(s.id),sd=suppSubDed(s.id);var hasPay=payments.some(function(py){return(py.payeeType==='supplier_direct'||py.payeeType==='supplier_sub')&&String(py.payeeId)===String(s.id)});return'<tr><td>'+bdg(s.num,'bc')+'</td><td style="font-size:11px;color:var(--text2)">'+esc(s.projNum)+'</td><td><span class="clink" onclick="viewSupplier(\''+s.id+'\')">'+esc(s.company)+'</span></td><td>'+esc(s.short)+'</td><td style="font-size:11px">'+esc(s.vat||'—')+'</td><td>'+esc(s.phone||'—')+'</td><td style="color:var(--gr);font-weight:500">'+fmt(dp)+'</td><td style="color:var(--am)">'+fmt(sd)+'</td><td>'+(hasPay?'':'<button class="bdel" onclick="delSupplier(\''+s.id+'\')">&#128465;</button>')+'</td></tr>'}).join('')}
+function renderContractors(){var tb=G('cont-tb');if(!contractors.length){tb.innerHTML='<tr><td colspan="9"><div class="empty">No contractors yet</div></td></tr>';return}tb.innerHTML=contractors.map(function(c){var tv=ctv(c)||+c.agreed||0,wp=cwp(c),paid=contPaid(c.id),ded=contDed(c.id),bal=tv*(wp/100)-paid-contPend(c.id)-ded;var hasProg=c.progress&&c.progress.some(function(r){return r.workDone>0});var hasPay=payments.some(function(py){return py.payeeType==='contractor'&&String(py.payeeId)===String(c.id)});return'<tr><td>'+bdg(c.num,'bpend')+'</td><td style="font-size:11px;color:var(--text2)">'+esc(c.projNum)+'</td><td><span class="clink" onclick="viewContractor(\''+c.id+'\')">'+esc(c.company)+'</span></td><td>'+esc(c.trade)+'</td><td>'+fmt(c.agreed)+'</td><td><span style="font-weight:600;color:var(--pu)">'+wp.toFixed(1)+'%</span></td><td style="color:var(--gr);font-weight:500">'+fmt(paid)+'</td><td style="color:var(--am)">'+fmt(ded)+'</td><td style="font-weight:500;color:'+(bal>=0?'var(--gr)':'var(--rd)')+'">'+fmt(bal)+'</td><td>'+(hasProg||hasPay?'':'<button class="bdel" onclick="delContractor(\''+c.id+'\')">&#128465;</button>')+'</td></tr>'}).join('')}
+function renderPayments(){var tb=G('pay-tb');if(!payments.length){tb.innerHTML='<tr><td colspan="9"><div class="empty">No payments yet</div></td></tr>';return}var cL={'supplier_direct':'Supp Direct','supplier_sub':'Supp→Sub','contractor':'Contractor','suspense':'Suspense','suspense_transfer':'Susp.Trf','accommodation':'Accommodation','material':'Material','direct':'Direct Cost'},cC={'supplier_direct':'ba','supplier_sub':'bc','contractor':'bpur','suspense':'bpend','suspense_transfer':'bc','accommodation':'bc','material':'bred','direct':'bpend'};tb.innerHTML=payments.map(function(p){return'<tr><td style="font-size:11px;color:var(--text2)">'+esc(p.ref)+'</td><td>'+esc(p.project)+'</td><td>'+bdg(cL[p.payeeType]||p.payeeType,cC[p.payeeType]||'bpur')+'</td><td>'+esc(p.payeeName)+'</td><td style="font-weight:500">'+fmt(p.amount)+'</td><td>'+fd(p.date)+'</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.remarks)+'</td><td>'+bdg(p.status,p.status==='Approved'?'ba':'bpend')+'</td><td><button onclick="approveOne(\''+p.id+'\')" style="padding:3px 6px;font-size:11px">&#128065;</button></td></tr>'}).join('')}
+function approveOne(id){
+  var p=payments.find(function(x){return String(x.id)===String(id)});
+  if(!p||p.status!=='Pending')return;
+  requirePIN('Approve Payment','Approving '+fmt(p.amount)+' to '+(p.payeeName||''),function(){
+    p.status='Approved';
+    apiUF('payments',id,'status','Approved').then(function(){
+      toast('Approved — moved to Finance');renderPayments();renderApprovals();renderDash();renderSuppliers();renderContractors();
+      if(currentSheetId){var cp=projects.find(function(x){return String(x.id)===String(currentSheetId)});if(cp)renderSheet(cp);}
+    });
+  });
+}
+function renderApprovals(){var pend=payments.filter(function(p){return p.status==='Pending'});var el=G('appr-list');var cL={'supplier_direct':'Supp Direct','supplier_sub':'Supp to Sub','contractor':'Contractor','suspense':'Suspense','suspense_transfer':'Susp Transfer','accommodation':'Accommodation','material':'Material','direct':'Direct Cost'};if(!pend.length){el.innerHTML='<div class="card"><div class="empty">No pending approvals</div></div>';return}el.innerHTML=pend.map(function(p){return'<div class="card" style="margin-bottom:8px"><div class="ch"><span><strong>'+esc(p.ref)+'</strong> — '+esc(p.payeeName)+'</span>'+bdg(p.status,'bpend')+'</div><div style="padding:10px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:12px"><div><div style="color:var(--text3);font-size:10px">Project</div>'+esc(p.project)+'</div><div><div style="color:var(--text3);font-size:10px">Category</div>'+esc(cL[p.payeeType]||p.payeeType||p.category||'')+'</div><div><div style="color:var(--text3);font-size:10px">Amount</div><strong style="color:var(--gr)">'+fmt(p.amount)+'</strong></div><div><div style="color:var(--text3);font-size:10px">Remarks</div>'+esc(p.remarks)+'</div></div><div style="padding:8px 12px;border-top:.5px solid var(--border);display:flex;gap:6px;justify-content:flex-end"><button class="bno" onclick="doAppr(\''+p.id+'\',false)">&#10005; Reject</button><button class="bok" onclick="doAppr(\''+p.id+'\',true)">&#10003; Approve</button></div></div>'}).join('')}
+function doAppr(id,ok){
+  var p=payments.find(function(x){return String(x.id)===String(id)});if(!p)return;
+  if(ok){
+    requirePIN('Approve Payment','Approving '+fmt(p.amount)+' to '+p.payeeName,function(){
+      p.status='Approved';
+      apiUF('payments',id,'status','Approved').then(function(){
+        toast('Approved — moved to Finance');renderApprovals();renderPayments();renderDash();renderSuppliers();renderContractors();
+        if(currentSheetId){var cp=projects.find(function(x){return String(x.id)===String(currentSheetId)});if(cp)renderSheet(cp);}
+      });
+    });
+  } else {
+    if(!confirm('Reject this payment?'))return;
+    p.status='Rejected';
+    apiUF('payments',id,'status','Rejected').then(function(){toast('Rejected');renderApprovals();renderPayments();renderDash();});
+  }
+}
 function renderDash(){
   var active=projects.filter(function(p){return p.status==='Active'}),comp=projects.filter(function(p){return p.status==='Complete'});
   G('dash-stats').innerHTML='<div class="stat"><div class="sl">Active Projects</div><div class="sv" style="color:var(--gr)">'+active.length+'</div></div><div class="stat"><div class="sl">Completed</div><div class="sv" style="color:var(--bl)">'+comp.length+'</div></div><div class="stat"><div class="sl">Suppliers</div><div class="sv" style="color:var(--put)">'+suppliers.length+'</div></div><div class="stat"><div class="sl">Contractors</div><div class="sv" style="color:var(--am)">'+contractors.length+'</div></div>';
@@ -608,6 +785,140 @@ function exportAll(){
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Ref','Project','Category','Payee','Amount','Date','Remarks','Status'],...payments.map(function(p){return[p.ref,p.project,p.category,p.payeeName,+p.amount||0,p.date,p.remarks,p.status]})]),'Payments');
   XLSX.writeFile(wb,'ProjectHub_'+new Date().toISOString().split('T')[0]+'.xlsx');toast('Exported');
 }
+
+// ── TRANSFER SUSPENSE ─────────────────────────────────────────
+function openTransfer(projNum,name,remaining){
+  var pc=contractors.filter(function(c){return c.projNum===projNum});
+  if(!pc.length){toast('No contractors in this project');return}
+  G('transfer-info').innerHTML='Transferring suspense for <strong>'+esc(name)+'</strong>. Remaining: <strong>'+fmt(remaining)+'</strong>';
+  var sel=G('transfer-cont');sel.innerHTML='<option value="">— select contractor —</option>';
+  pc.forEach(function(c){sel.innerHTML+='<option value="'+c.id+'">'+esc(c.num)+' — '+esc(c.company)+'</option>'});
+  G('transfer-amt').value=remaining>0?remaining:'';G('transfer-remarks').value='';
+  G('transfer-cont').dataset.proj=projNum;G('transfer-cont').dataset.name=name;
+  openModal('mo-transfer');
+}
+G('save-transfer').addEventListener('click',function(){
+  var cid=G('transfer-cont').value,projNum=G('transfer-cont').dataset.proj,name=G('transfer-cont').dataset.name;
+  var amt=parseFloat(G('transfer-amt').value)||0,rem=G('transfer-remarks').value||'Suspense transfer from '+name;
+  if(!cid||!amt){toast('Select contractor and enter amount');return}
+  var cont=contractors.find(function(x){return String(x.id)===String(cid)});
+  var ref='TRF-'+new Date().getFullYear()+'-'+String(payments.length+1).padStart(3,'0');
+  var py={id:Date.now(),ref:ref,project:projNum,payeeType:'suspense_transfer',payeeId:cid,payeeName:cont?cont.company:'',linkedContractorId:cid,suspenseName:name,amount:amt,date:new Date().toISOString().split('T')[0],refNo:'',remarks:rem,status:'Approved'};
+  payments.push(py);
+  apiSave('save_payment',py).then(function(){closeModal('mo-transfer');toast('Transferred to '+(cont?cont.company:'contractor'));var p=projects.find(function(x){return x.num===projNum});if(p)renderSheet(p);renderContractors();});
+});
+G('close-transfer').addEventListener('click',function(){closeModal('mo-transfer')});
+G('cancel-transfer').addEventListener('click',function(){closeModal('mo-transfer')});
+
+// ── DELETE ────────────────────────────────────────────────────
+function delSupplier(id){
+  if(!confirm('Delete this supplier? This cannot be undone.'))return;
+  suppliers=suppliers.filter(function(x){return String(x.id)!==String(id)});
+  gasPost({action:'delete_record',table:'suppliers',id:id});
+  renderSuppliers();
+  if(currentSheetId){var p=projects.find(function(x){return String(x.id)===String(currentSheetId)});if(p)renderSheet(p);}
+  toast('Supplier deleted');
+}
+function delContractor(id){
+  if(!confirm('Delete this contractor? This cannot be undone.'))return;
+  contractors=contractors.filter(function(x){return String(x.id)!==String(id)});
+  gasPost({action:'delete_record',table:'contractors',id:id});
+  renderContractors();
+  if(currentSheetId){var p=projects.find(function(x){return String(x.id)===String(currentSheetId)});if(p)renderSheet(p);}
+  toast('Contractor deleted');
+}
+
+// ── PIN APPROVAL ─────────────────────────────────────────────
+var PIN = '4070';
+var pinCallback = null;
+
+function pinNext(el, nextId) {
+  if(el.value.length === 1) { var n=G(nextId); if(n)n.focus(); }
+}
+function pinSubmit() {
+  var entered = [G('pin-d1'),G('pin-d2'),G('pin-d3'),G('pin-d4')].map(function(e){return e.value}).join('');
+  if(entered.length < 4) return;
+  if(entered === PIN) {
+    closeModal('mo-pin');
+    G('pin-err').textContent='';
+    [G('pin-d1'),G('pin-d2'),G('pin-d3'),G('pin-d4')].forEach(function(e){e.value=''});
+    if(pinCallback) pinCallback();
+    pinCallback = null;
+  } else {
+    G('pin-err').textContent='Incorrect PIN. Try again.';
+    [G('pin-d1'),G('pin-d2'),G('pin-d3'),G('pin-d4')].forEach(function(e){e.value=''});
+    G('pin-d1').focus();
+  }
+}
+function requirePIN(title, desc, callback) {
+  G('pin-title').textContent = title || 'Enter PIN';
+  G('pin-desc').textContent = desc || '';
+  G('pin-err').textContent = '';
+  [G('pin-d1'),G('pin-d2'),G('pin-d3'),G('pin-d4')].forEach(function(e){e.value=''});
+  pinCallback = callback;
+  openModal('mo-pin');
+  setTimeout(function(){G('pin-d1').focus()},100);
+}
+G('close-pin').addEventListener('click',function(){closeModal('mo-pin');pinCallback=null;[G('pin-d1'),G('pin-d2'),G('pin-d3'),G('pin-d4')].forEach(function(e){e.value=''})});
+[G('pin-d1'),G('pin-d2'),G('pin-d3'),G('pin-d4')].forEach(function(el){
+  el.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!el.value){var prev={'pin-d2':'pin-d1','pin-d3':'pin-d2','pin-d4':'pin-d3'}[el.id];if(prev){var p=G(prev);p.value='';p.focus();}}});
+});
+
+// ── FINANCE ──────────────────────────────────────────────────
+function renderFinance(){
+  var approved=payments.filter(function(p){return p.status==='Approved'});
+  var paid=payments.filter(function(p){return p.status==='Paid'});
+  var el=G('finance-list');
+  var cL={'supplier_direct':'Supp Direct','supplier_sub':'Supp to Sub','contractor':'Contractor','suspense':'Suspense','suspense_transfer':'Susp Transfer','accommodation':'Accommodation','material':'Material','direct':'Direct Cost'};
+  var cC={'supplier_direct':'ba','supplier_sub':'bc','contractor':'bpur','suspense':'bpend','suspense_transfer':'bc','accommodation':'bc','material':'bred','direct':'bpend'};
+
+  var h='';
+  // Pending payment section
+  if(approved.length){
+    h+='<div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Awaiting Payment ('+approved.length+')</div>';
+    h+=approved.map(function(p){
+      return '<div class="card" style="margin-bottom:8px"><div class="ch"><span><strong>'+esc(p.ref)+'</strong> — '+esc(p.payeeName||'')+'</span>'+bdg('Approved','ba')+'</div>'+
+      '<div style="padding:10px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:12px">'+
+      '<div><div style="color:var(--text3);font-size:10px">Project</div>'+esc(p.project)+'</div>'+
+      '<div><div style="color:var(--text3);font-size:10px">Category</div>'+bdg(cL[p.payeeType]||p.payeeType,cC[p.payeeType]||'bpur')+'</div>'+
+      '<div><div style="color:var(--text3);font-size:10px">Amount</div><strong style="color:var(--gr)">'+fmt(p.amount)+'</strong></div>'+
+      '<div><div style="color:var(--text3);font-size:10px">Date Approved</div>'+fd(p.date)+'</div>'+
+      '</div>'+
+      (p.remarks?'<div style="padding:0 12px 8px;font-size:11px;color:var(--text2)">'+esc(p.remarks)+'</div>':'')+
+      '<div style="padding:8px 12px;border-top:.5px solid var(--border);display:flex;gap:6px;justify-content:flex-end">'+
+      '<button class="bsm" data-pid="'+p.id+'" onclick="markPaidBtn(this)">&#10003; Mark as Paid</button>'+
+      '</div></div>';
+    }).join('');
+  } else {
+    h+='<div class="card" style="margin-bottom:10px"><div class="empty">No approved payments awaiting payment</div></div>';
+  }
+
+  // Paid history
+  if(paid.length){
+    h+='<div style="font-size:12px;font-weight:600;color:var(--text2);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.04em">Paid History ('+paid.length+')</div>';
+    h+='<div class="card"><div class="tw"><table><thead><tr><th>Ref</th><th>Project</th><th>Category</th><th>Payee</th><th>Amount</th><th>Date Paid</th><th>Remarks</th></tr></thead><tbody>';
+    h+=paid.map(function(p){return'<tr><td style="font-size:11px;color:var(--text2)">'+esc(p.ref)+'</td><td>'+esc(p.project)+'</td><td>'+bdg(cL[p.payeeType]||p.payeeType,cC[p.payeeType]||'bpur')+'</td><td>'+esc(p.payeeName||'—')+'</td><td style="font-weight:500;color:var(--gr)">'+fmt(p.amount)+'</td><td>'+fd(p.datePaid||p.date)+'</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.remarks)+'</td></tr>'}).join('');
+    h+='</tbody></table></div></div>';
+  }
+
+  el.innerHTML=h||'<div class="card"><div class="empty">No payments yet</div></div>';
+}
+
+function markPaidBtn(btn){markPaid(btn.dataset.pid);}
+function markPaid(id){
+  var p=payments.find(function(x){return String(x.id)===String(id)});
+  if(!p)return;
+  requirePIN('Finance — Mark as Paid', fmt(p.amount)+' to '+p.payeeName, function(){
+    p.status='Paid';
+    p.datePaid=new Date().toISOString().split('T')[0];
+    apiUF('payments',id,'status','Paid').then(function(){
+      toast('Payment marked as Paid');
+      renderFinance();renderDash();renderPayments();renderApprovals();renderSuppliers();renderContractors();
+      if(currentSheetId){var cp=projects.find(function(x){return String(x.id)===String(currentSheetId)});if(cp)renderSheet(cp);}
+    });
+  });
+}
+
 // INIT
 function showApp(){G('ls').classList.add('hidden');G('app').style.display='flex';refreshNav();if(typeof renderDash==='function')renderDash();}
 function loadData(){
