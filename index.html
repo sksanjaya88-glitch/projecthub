@@ -840,6 +840,9 @@ function delContractor(id){
 
 // ── PIN APPROVAL ─────────────────────────────────────────────
 var PIN = '4070';
+var FINANCE_PIN = '1988';
+var pinUseFinance = false; // Approval PIN
+var FINANCE_PIN = '1988'; // Finance payment PIN
 var pinCallback = null;
 
 function pinNext(el, nextId) {
@@ -848,10 +851,12 @@ function pinNext(el, nextId) {
 function pinSubmit() {
   var entered = [G('pin-d1'),G('pin-d2'),G('pin-d3'),G('pin-d4')].map(function(e){return e.value}).join('');
   if(entered.length < 4) return;
-  if(entered === PIN) {
+  var correct = pinUseFinance ? FINANCE_PIN : PIN;
+  if(entered === correct) {
     closeModal('mo-pin');
     G('pin-err').textContent='';
     [G('pin-d1'),G('pin-d2'),G('pin-d3'),G('pin-d4')].forEach(function(e){e.value=''});
+    pinUseFinance = false;
     if(pinCallback) pinCallback();
     pinCallback = null;
   } else {
@@ -860,12 +865,13 @@ function pinSubmit() {
     G('pin-d1').focus();
   }
 }
-function requirePIN(title, desc, callback) {
+function requirePIN(title, desc, callback, useFinancePin) {
   G('pin-title').textContent = title || 'Enter PIN';
   G('pin-desc').textContent = desc || '';
   G('pin-err').textContent = '';
   [G('pin-d1'),G('pin-d2'),G('pin-d3'),G('pin-d4')].forEach(function(e){e.value=''});
   pinCallback = callback;
+  pinUseFinance = !!useFinancePin;
   openModal('mo-pin');
   setTimeout(function(){G('pin-d1').focus()},100);
 }
@@ -875,50 +881,133 @@ G('close-pin').addEventListener('click',function(){closeModal('mo-pin');pinCallb
 });
 
 // ── FINANCE ──────────────────────────────────────────────────
+function getPaymentDetails(p){
+  var proj=projects.find(function(x){return x.num===p.project});
+  var projName=proj?(proj.short+' ('+proj.num+')'):p.project;
+  var cL={'supplier_direct':'Supplier — Direct Cost','supplier_sub':'Supplier — Reduce from Contractor','contractor':'Contractor','suspense':'Suspense','suspense_transfer':'Suspense Transfer','accommodation':'Accommodation','material':'Material Transfer','direct':'Direct Cost'};
+  var typeLabel=cL[p.payeeType]||p.payeeType;
+  var bank='',phone='',balance=null,isEntity=false,payeeDetail=p.payeeName||'';
+  if(p.payeeType==='supplier_direct'||p.payeeType==='supplier_sub'){
+    var s=suppliers.find(function(x){return String(x.id)===String(p.payeeId)});
+    if(s){bank=(s.bank||'')+(s.branch?' / '+s.branch:'')+' — Acc: '+(s.acct||'—');phone=s.phone||'';payeeDetail=s.company+' ('+s.num+')';isEntity=true;}
+  } else if(p.payeeType==='contractor'){
+    var c=contractors.find(function(x){return String(x.id)===String(p.payeeId)});
+    if(c){bank=(c.bank||'')+(c.branch?' / '+c.branch:'')+' — Acc: '+(c.acct||'—');phone=c.phone||'';var tv=ctv(c)||+c.agreed||0,wp=cwp(c),da=tv*(wp/100),paid=contPaid(c.id),pend=contPend(c.id),ded=contDed(c.id);balance=da-paid-pend-ded;payeeDetail=c.company+' ('+c.num+') — '+c.trade;isEntity=true;}
+  } else if(p.payeeType==='material'){
+    var mc=contractors.find(function(x){return String(x.id)===String(p.linkedContractorId)});
+    if(mc){var tv2=ctv(mc)||+mc.agreed||0,wp2=cwp(mc),da2=tv2*(wp2/100),p2=contPaid(mc.id),pe2=contPend(mc.id),d2=contDed(mc.id);balance=da2-p2-pe2-d2;payeeDetail='Material → '+mc.company+' ('+mc.num+')';isEntity=true;}
+  }
+  return {projName:projName,typeLabel:typeLabel,payeeDetail:payeeDetail,bank:bank,phone:phone,balance:balance,isEntity:isEntity};
+}
+
+function viewPaymentDetail(id){
+  var p=payments.find(function(x){return String(x.id)===String(id)});if(!p)return;
+  var d=getPaymentDetails(p);
+  var h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';
+  h+='<div class="det-f"><div class="dl">Project</div><div class="dv">'+esc(d.projName)+'</div></div>';
+  h+='<div class="det-f"><div class="dl">Payment Ref</div><div class="dv" style="color:var(--pu);font-weight:600">'+esc(p.ref)+'</div></div>';
+  h+='<div class="det-f"><div class="dl">Payment Type &amp; Details</div><div class="dv">'+esc(d.typeLabel)+' &mdash; '+esc(d.payeeDetail)+'</div></div>';
+  h+='<div class="det-f"><div class="dl">Date</div><div class="dv">'+fd(p.date)+'</div></div>';
+  h+='</div>';
+  h+='<div style="background:var(--grb);border-radius:var(--r);padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">';
+  h+='<span style="font-size:11px;font-weight:600;color:var(--gr);text-transform:uppercase;letter-spacing:.04em">Payment Amount</span>';
+  h+='<span style="font-size:22px;font-weight:700;color:var(--gr)">'+fmt(p.amount)+'</span>';
+  h+='</div>';
+  // Bank details
+  if(d.bank){
+    h+='<div style="background:var(--blb);border-radius:var(--r);padding:10px 14px;margin-bottom:10px">';
+    h+='<div style="font-size:10px;font-weight:600;color:var(--blt);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Bank Details</div>';
+    h+='<div style="font-size:13px;font-weight:500">'+esc(d.bank)+'</div>';
+    h+='</div>';
+  } else if(!d.isEntity){
+    h+='<div style="background:var(--bg2);border-radius:var(--r);padding:10px 14px;margin-bottom:10px">';
+    h+='<div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Bank Details <span style="font-weight:400;color:var(--text3)">(enter manually)</span></div>';
+    h+='<textarea id="fbn-'+p.id+'" style="width:100%;font-size:12px;min-height:48px;resize:vertical" placeholder="Bank name / branch / account number...">'+esc(p.bankNote||'')+'</textarea>';
+    h+='<button class="bsm" style="font-size:11px;margin-top:6px" data-pid="'+p.id+'" onclick="saveBankNote(this.dataset.pid)">Save Bank Details</button>';
+    h+='</div>';
+  }
+  // Phone
+  if(d.phone){
+    h+='<div style="background:var(--bg2);border-radius:var(--r);padding:8px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px">';
+    h+='<span style="font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">Phone</span>';
+    h+='<span style="font-size:13px;font-weight:500">'+esc(d.phone)+'</span>';
+    h+='</div>';
+  } else if(!d.isEntity){
+    h+='<div style="background:var(--bg2);border-radius:var(--r);padding:10px 14px;margin-bottom:10px">';
+    h+='<div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Phone / Contact <span style="font-weight:400;color:var(--text3)">(enter manually)</span></div>';
+    h+='<div style="display:flex;gap:6px"><input id="fpn-'+p.id+'" style="font-size:12px" placeholder="+94 7x xxx xxxx" value="'+esc(p.phoneNote||'')+'"><button class="bsm" data-pid="'+p.id+'" onclick="savePhoneNote(this.dataset.pid)">Save</button></div>';
+    h+='</div>';
+  }
+  // Balance
+  if(d.balance!==null){
+    var balAfter=d.balance-(+p.amount||0);
+    var isOver=balAfter<0;
+    h+='<div style="background:'+(isOver?'var(--rdb)':'var(--grb)')+';border-radius:var(--r);padding:10px 14px;margin-bottom:10px;border:.5px solid '+(isOver?'var(--rd)':'var(--gr)')+'">';
+    h+='<div style="font-size:10px;font-weight:600;color:'+(isOver?'var(--rd)':'var(--gr)')+';margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Balance After This Payment</div>';
+    h+='<div style="font-size:18px;font-weight:700;color:'+(isOver?'var(--rd)':'var(--gr)')+'">'+fmt(balAfter)+'</div>';
+    if(isOver)h+='<div style="font-size:12px;color:var(--rd);margin-top:6px;font-weight:600">⚠️ Warning: Overpayment — This payment exceeds the balance due by '+fmt(Math.abs(balAfter))+'</div>';
+    h+='</div>';
+  }
+  if(p.remarks){
+    h+='<div style="background:var(--bg2);border-radius:var(--r);padding:8px 14px">';
+    h+='<div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Remarks</div>';
+    h+='<div style="font-size:12px">'+esc(p.remarks)+'</div>';
+    h+='</div>';
+  }
+  G('detail-title').textContent='Payment — '+p.ref;
+  G('detail-body').innerHTML=h;
+  openModal('mo-detail');
+}
+
+function saveBankNote(id){var el=G('fbn-'+id);if(!el)return;var p=payments.find(function(x){return String(x.id)===String(id)});if(!p)return;p.bankNote=el.value;apiUF('payments',id,'bankNote',el.value).then(function(){toast('Bank details saved')});}
+function savePhoneNote(id){var el=G('fpn-'+id);if(!el)return;var p=payments.find(function(x){return String(x.id)===String(id)});if(!p)return;p.phoneNote=el.value;apiUF('payments',id,'phoneNote',el.value).then(function(){toast('Contact saved')});}
+function viewPay(btn){viewPaymentDetail(btn.dataset.pid);}
+
 function renderFinance(){
   var approved=payments.filter(function(p){return p.status==='Approved'});
   var paid=payments.filter(function(p){return p.status==='Paid'});
-  var el=G('finance-list');
-  var cL={'supplier_direct':'Supp Direct','supplier_sub':'Supp to Sub','contractor':'Contractor','suspense':'Suspense','suspense_transfer':'Susp Transfer','accommodation':'Accommodation','material':'Material','direct':'Direct Cost'};
+  var el=G('finance-list');if(!el)return;
+  var cL={'supplier_direct':'Supp Direct','supplier_sub':'Supp→Sub','contractor':'Contractor','suspense':'Suspense','suspense_transfer':'Susp Trf','accommodation':'Accommodation','material':'Material','direct':'Direct Cost'};
   var cC={'supplier_direct':'ba','supplier_sub':'bc','contractor':'bpur','suspense':'bpend','suspense_transfer':'bc','accommodation':'bc','material':'bred','direct':'bpend'};
-
   var h='';
-  // Pending payment section
   if(approved.length){
     h+='<div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Awaiting Payment ('+approved.length+')</div>';
     h+=approved.map(function(p){
-      return '<div class="card" style="margin-bottom:8px"><div class="ch"><span><strong>'+esc(p.ref)+'</strong> — '+esc(p.payeeName||'')+'</span>'+bdg('Approved','ba')+'</div>'+
-      '<div style="padding:10px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:12px">'+
-      '<div><div style="color:var(--text3);font-size:10px">Project</div>'+esc(p.project)+'</div>'+
-      '<div><div style="color:var(--text3);font-size:10px">Category</div>'+bdg(cL[p.payeeType]||p.payeeType,cC[p.payeeType]||'bpur')+'</div>'+
-      '<div><div style="color:var(--text3);font-size:10px">Amount</div><strong style="color:var(--gr)">'+fmt(p.amount)+'</strong></div>'+
-      '<div><div style="color:var(--text3);font-size:10px">Date Approved</div>'+fd(p.date)+'</div>'+
-      '</div>'+
-      (p.remarks?'<div style="padding:0 12px 8px;font-size:11px;color:var(--text2)">'+esc(p.remarks)+'</div>':'')+
-      '<div style="padding:8px 12px;border-top:.5px solid var(--border);display:flex;gap:6px;justify-content:flex-end">'+
-      '<button class="bsm" data-pid="'+p.id+'" onclick="markPaidBtn(this)">&#10003; Mark as Paid</button>'+
-      '</div></div>';
+      var d=getPaymentDetails(p);
+      var balAfter=d.balance!==null?d.balance-(+p.amount||0):null;
+      var isOver=balAfter!==null&&balAfter<0;
+      return '<div class="card" style="margin-bottom:8px">'+
+        '<div class="ch"><span><strong>'+esc(p.ref)+'</strong> &mdash; '+esc(d.payeeDetail||p.payeeName||'')+'</span>'+bdg('Approved','ba')+'</div>'+
+        '<div style="padding:10px 12px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;font-size:12px">'+
+          '<div><div style="color:var(--text3);font-size:10px">Project</div>'+esc(d.projName)+'</div>'+
+          '<div><div style="color:var(--text3);font-size:10px">Category</div>'+bdg(cL[p.payeeType]||p.payeeType,cC[p.payeeType]||'bpur')+'</div>'+
+          '<div><div style="color:var(--text3);font-size:10px">Amount</div><strong style="color:var(--gr);font-size:13px">'+fmt(p.amount)+'</strong></div>'+
+          '<div><div style="color:var(--text3);font-size:10px">Bank / Account</div><div style="font-size:11px;color:var(--text2)">'+esc(d.bank||p.bankNote||'—')+'</div></div>'+
+        '</div>'+
+        (isOver?'<div style="padding:4px 12px 8px;font-size:11px;font-weight:600;color:var(--rd)">⚠️ Overpayment — balance after: '+fmt(balAfter)+'</div>':'')+
+        '<div style="padding:8px 12px;border-top:.5px solid var(--border);display:flex;gap:6px;justify-content:flex-end">'+
+          '<button class="bsm" data-pid="'+p.id+'" onclick="viewPay(this)">&#128065; View</button>'+
+          '<button class="bp" data-pid="'+p.id+'" onclick="markPaidBtn(this)">&#10003; Mark as Paid (PIN)</button>'+
+        '</div>'+
+      '</div>';
     }).join('');
   } else {
     h+='<div class="card" style="margin-bottom:10px"><div class="empty">No approved payments awaiting payment</div></div>';
   }
-
-  // Paid history
   if(paid.length){
     h+='<div style="font-size:12px;font-weight:600;color:var(--text2);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.04em">Paid History ('+paid.length+')</div>';
-    h+='<div class="card"><div class="tw"><table><thead><tr><th>Ref</th><th>Project</th><th>Category</th><th>Payee</th><th>Amount</th><th>Date Paid</th><th>Remarks</th></tr></thead><tbody>';
-    h+=paid.map(function(p){return'<tr><td style="font-size:11px;color:var(--text2)">'+esc(p.ref)+'</td><td>'+esc(p.project)+'</td><td>'+bdg(cL[p.payeeType]||p.payeeType,cC[p.payeeType]||'bpur')+'</td><td>'+esc(p.payeeName||'—')+'</td><td style="font-weight:500;color:var(--gr)">'+fmt(p.amount)+'</td><td>'+fd(p.datePaid||p.date)+'</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.remarks)+'</td></tr>'}).join('');
+    h+='<div class="card"><div class="tw"><table><thead><tr><th>Ref</th><th>Project</th><th>Category</th><th>Payee</th><th>Amount</th><th>Date Paid</th><th></th></tr></thead><tbody>';
+    h+=paid.map(function(p){return'<tr><td style="font-size:11px;color:var(--text2)">'+esc(p.ref)+'</td><td>'+esc(p.project)+'</td><td>'+bdg(cL[p.payeeType]||p.payeeType,cC[p.payeeType]||'bpur')+'</td><td>'+esc(p.payeeName||'—')+'</td><td style="font-weight:500;color:var(--gr)">'+fmt(p.amount)+'</td><td>'+fd(p.datePaid||p.date)+'</td><td><button style="padding:3px 6px;font-size:11px" data-pid="'+p.id+'" onclick="viewPay(this)">&#128065;</button></td></tr>'}).join('');
     h+='</tbody></table></div></div>';
   }
-
-  el.innerHTML=h||'<div class="card"><div class="empty">No payments yet</div></div>';
+  el.innerHTML=h||'<div class="card"><div class="empty">No finance activity yet</div></div>';
 }
 
 function markPaidBtn(btn){markPaid(btn.dataset.pid);}
 function markPaid(id){
   var p=payments.find(function(x){return String(x.id)===String(id)});
   if(!p)return;
-  requirePIN('Finance — Mark as Paid', fmt(p.amount)+' to '+p.payeeName, function(){
+  requirePIN('Finance — Mark as Paid', fmt(p.amount)+' to '+(p.payeeName||''), function(){
     p.status='Paid';
     p.datePaid=new Date().toISOString().split('T')[0];
     apiUF('payments',id,'status','Paid').then(function(){
@@ -926,7 +1015,7 @@ function markPaid(id){
       renderFinance();renderDash();renderPayments();renderApprovals();renderSuppliers();renderContractors();
       if(currentSheetId){var cp=projects.find(function(x){return String(x.id)===String(currentSheetId)});if(cp)renderSheet(cp);}
     });
-  });
+  }, true); // true = use FINANCE_PIN
 }
 
 // INIT
