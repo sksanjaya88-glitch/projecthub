@@ -330,7 +330,7 @@ function nav(pg,el){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('active')});
   document.querySelectorAll('.ni,.proj-ni').forEach(function(n){n.classList.remove('active')});
   G('pg-'+pg).classList.add('active');if(el)el.classList.add('active');
-  var fns={dashboard:function(){renderDash()},projects:function(){renderProjects()},pm:function(){renderPM()},suppliers:function(){renderSuppliers()},contractors:function(){renderContractors()},payments:function(){renderPayments()},approvals:function(){renderApprovals()}};
+  var fns={dashboard:function(){renderDash()},projects:function(){renderProjects()},pm:function(){renderPM()},suppliers:function(){renderSuppliers()},contractors:function(){renderContractors()},payments:function(){renderPayments()},approvals:function(){renderApprovals()},finance:function(){renderFinance()}};
   if(fns[pg])fns[pg]();
 }
 function openModal(id){G(id).classList.add('open')}
@@ -589,20 +589,30 @@ G('close-detail').addEventListener('click',function(){closeModal('mo-detail')});
 G('close-detail-2').addEventListener('click',function(){closeModal('mo-detail')});
 // PAYMENT WIZARD
 function goPayStep(n){[1,2,3].forEach(function(i){G('pay-s'+i).classList.remove('on');G('sdot-'+i).className='sdot'+(i<n?' done':'')});G('pay-s'+n).classList.add('on');G('sdot-'+n).className='sdot on'}
-function openPayModal(preProj){
-  payState={proj:null,cat:null,payeeId:null,payeeName:null,payeeType:null};
-  var sel=G('pay-proj-sel');sel.innerHTML='<option value="">— select a project —</option>';
+function openPayModal(preProj,preCategory){
+  payState={proj:preProj||null,cat:preCategory||null,payeeId:null,payeeName:null,suspenseName:null,linkedContractorId:null};
+  var sel=G('pay-proj-sel');
+  sel.innerHTML='<option value="">— select a project —</option>';
   projects.forEach(function(p){sel.innerHTML+='<option value="'+esc(p.num)+'"'+(preProj===p.num?' selected':'')+'>'+esc(p.num)+' — '+esc(p.short)+'</option>'});
-  G('pay-cat').value='';G('pay-payee-sel').innerHTML='<option value="">— select payee —</option>';
-  G('pay-payee-wrap').style.display='none';G('pay-int-wrap').style.display='none';G('pay-payee-summary').innerHTML='';
-  clr(['pay-amount','pay-date','pay-ref-no','pay-remarks','pay-int-desc']);G('pay-s3-info').innerHTML='';
-  goPayStep(1);openModal('mo-payment');
+  var catEl=G('pay-cat');if(catEl)catEl.value=preCategory||'';
+  var df=G('pay-dynamic-fields');if(df)df.innerHTML='';
+  var ps=G('pay-payee-summary');if(ps)ps.innerHTML='';
+  var s3=G('pay-s3-info');if(s3)s3.innerHTML='';
+  clr(['pay-amount','pay-date','pay-ref-no','pay-remarks']);
+  if(preProj&&preCategory){
+    payState.proj=preProj;
+    onPayCat();
+    goPayStep(2);
+  } else {
+    goPayStep(1);
+  }
+  openModal('mo-payment');
 }
-function payStep2(){var proj=G('pay-proj-sel').value;if(!proj){toast('Select a project');return}payState.proj=proj;G('pay-cat').value='';G('pay-payee-wrap').style.display='none';G('pay-int-wrap').style.display='none';G('pay-payee-summary').innerHTML='';goPayStep(2)}
+function payStep2(){var proj=G('pay-proj-sel').value;if(!proj){toast('Select a project');return}payState.proj=proj;var catEl=G('pay-cat');if(catEl)catEl.value='';var df=G('pay-dynamic-fields');if(df)df.innerHTML='';var ps=G('pay-payee-summary');if(ps)ps.innerHTML='';goPayStep(2)}
 function onPayCat(){
   var cat=G('pay-cat').value,pn=payState.proj;
   var df=G('pay-dynamic-fields');if(df)df.innerHTML='';
-  G('pay-payee-summary').innerHTML='';
+  var psum=G('pay-payee-summary');if(psum)psum.innerHTML='';
   payState.cat=cat;payState.payeeId=null;payState.payeeName=null;payState.suspenseName=null;payState.linkedContractorId=null;
   if(!df)return;
   var h='';
@@ -640,12 +650,12 @@ function onPayCat(){
     payState.payeeName='Direct Cost';
   }
 }
-function onDynSup(){var id=G('dyn-sup')?G('dyn-sup').value:'';if(!id)return;var s=suppliers.find(function(x){return String(x.id)===String(id)});if(!s)return;payState.payeeId=id;payState.payeeName=s.company;var dp=suppDirectPaid(id),sd=suppSubDed(id);G('pay-payee-summary').innerHTML='<div class="payee-card"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div class="kpi"><div class="kpi-l">Direct Paid</div><div class="kpi-v" style="color:var(--gr)">'+fmt(dp)+'</div></div><div class="kpi"><div class="kpi-l">Sub Deducted</div><div class="kpi-v" style="color:var(--am)">'+fmt(sd)+'</div></div><div class="kpi"><div class="kpi-l">Bank/Account</div><div class="kpi-v" style="font-size:11px">'+esc(s.bank||'—')+'/'+esc(s.acct||'—')+'</div></div></div></div>';}
-function onDynCont(){var id=G('dyn-cont')?G('dyn-cont').value:'';if(!id)return;var c=contractors.find(function(x){return String(x.id)===String(id)});if(!c)return;payState.payeeId=id;payState.payeeName=c.company;var wp=cwp(c),tv=ctv(c)||+c.agreed||0,da=tv*(wp/100),paid=contPaid(id),pend=contPend(id),ded=contDed(id),bal=da-paid-pend-ded;G('pay-payee-summary').innerHTML='<div class="payee-card"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div class="kpi"><div class="kpi-l">Agreed</div><div class="kpi-v" style="color:var(--pu)">'+fmt(c.agreed)+'</div></div><div class="kpi"><div class="kpi-l">Progress</div><div class="kpi-v" style="color:var(--put)">'+wp.toFixed(1)+'%</div></div><div class="kpi"><div class="kpi-l">Work Done</div><div class="kpi-v" style="color:var(--put)">'+fmt(da)+'</div></div><div class="kpi"><div class="kpi-l">Paid</div><div class="kpi-v" style="color:var(--gr)">'+fmt(paid)+'</div></div><div class="kpi"><div class="kpi-l">Deductions</div><div class="kpi-v" style="color:var(--am)">'+fmt(ded)+'</div></div><div class="kpi"><div class="kpi-l">Balance</div><div class="kpi-v" style="color:'+(bal>=0?'var(--gr)':'var(--rd)')+'">'+fmt(bal)+'</div></div></div></div>';}
+function onDynSup(){var id=G('dyn-sup')?G('dyn-sup').value:'';if(!id)return;var s=suppliers.find(function(x){return String(x.id)===String(id)});if(!s)return;payState.payeeId=id;payState.payeeName=s.company;var dp=suppDirectPaid(id),sd=suppSubDed(id);var _ps=G('pay-payee-summary');if(_ps)_ps.innerHTML='<div class="payee-card"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div class="kpi"><div class="kpi-l">Direct Paid</div><div class="kpi-v" style="color:var(--gr)">'+fmt(dp)+'</div></div><div class="kpi"><div class="kpi-l">Sub Deducted</div><div class="kpi-v" style="color:var(--am)">'+fmt(sd)+'</div></div><div class="kpi"><div class="kpi-l">Bank/Account</div><div class="kpi-v" style="font-size:11px">'+esc(s.bank||'—')+'/'+esc(s.acct||'—')+'</div></div></div></div>';}
+function onDynCont(){var id=G('dyn-cont')?G('dyn-cont').value:'';if(!id)return;var c=contractors.find(function(x){return String(x.id)===String(id)});if(!c)return;payState.payeeId=id;payState.payeeName=c.company;var wp=cwp(c),tv=ctv(c)||+c.agreed||0,da=tv*(wp/100),paid=contPaid(id),pend=contPend(id),ded=contDed(id),bal=da-paid-pend-ded;var _ps=G('pay-payee-summary');if(_ps)_ps.innerHTML='<div class="payee-card"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div class="kpi"><div class="kpi-l">Agreed</div><div class="kpi-v" style="color:var(--pu)">'+fmt(c.agreed)+'</div></div><div class="kpi"><div class="kpi-l">Progress</div><div class="kpi-v" style="color:var(--put)">'+wp.toFixed(1)+'%</div></div><div class="kpi"><div class="kpi-l">Work Done</div><div class="kpi-v" style="color:var(--put)">'+fmt(da)+'</div></div><div class="kpi"><div class="kpi-l">Paid</div><div class="kpi-v" style="color:var(--gr)">'+fmt(paid)+'</div></div><div class="kpi"><div class="kpi-l">Deductions</div><div class="kpi-v" style="color:var(--am)">'+fmt(ded)+'</div></div><div class="kpi"><div class="kpi-l">Balance</div><div class="kpi-v" style="color:'+(bal>=0?'var(--gr)':'var(--rd)')+'">'+fmt(bal)+'</div></div></div></div>';}
 function onPayeeSelect(){
   var cat=G('pay-cat').value,id=parseInt(G('pay-payee-sel').value);G('pay-payee-summary').innerHTML='';if(!id)return;payState.payeeId=id;
-  if(cat==='supplier'){var s=suppliers.find(function(x){return x.id==id});if(!s)return;payState.payeeName=s.company;payState.payeeType='supplier';var paid=totalPaid('supplier',id),pend=totalPend('supplier',id);G('pay-payee-summary').innerHTML='<div class="payee-card"><div class="pk4"><div class="pk"><div class="pk-l">Total Paid</div><div class="pk-v" style="color:var(--gr)">'+fmt(paid)+'</div></div><div class="pk"><div class="pk-l">Pending</div><div class="pk-v" style="color:var(--am)">'+fmt(pend)+'</div></div><div class="pk"><div class="pk-l">Total</div><div class="pk-v" style="color:var(--pu)">'+fmt(paid+pend)+'</div></div></div><div class="bank-row"><div class="bank-item"><div class="bl">Bank</div><div class="bv">'+esc(s.bank||'—')+'</div></div><div class="bank-item"><div class="bl">Account</div><div class="bv">'+esc(s.acct||'—')+'</div></div></div></div>';}
-  else if(cat==='contractor'){var cc=contractors.find(function(x){return x.id==id});if(!cc)return;payState.payeeName=cc.company;payState.payeeType='contractor';var wp=cwp(cc),tv=ctv(cc)||+cc.agreed||0,da=tv*(wp/100),p2=totalPaid('contractor',id),pe2=totalPend('contractor',id),bal=da-p2-pe2;G('pay-payee-summary').innerHTML='<div class="payee-card"><div class="pk4"><div class="pk"><div class="pk-l">Agreed</div><div class="pk-v" style="color:var(--pu);font-size:12px">'+fmt(cc.agreed)+'</div></div><div class="pk"><div class="pk-l">Progress</div><div class="pk-v" style="color:var(--put)">'+wp.toFixed(1)+'%</div></div><div class="pk"><div class="pk-l">Work Done</div><div class="pk-v" style="color:var(--put);font-size:12px">'+fmt(da)+'</div></div><div class="pk"><div class="pk-l">Paid</div><div class="pk-v" style="color:var(--gr);font-size:12px">'+fmt(p2)+'</div></div><div class="pk"><div class="pk-l">Pending</div><div class="pk-v" style="color:var(--am);font-size:12px">'+fmt(pe2)+'</div></div><div class="pk"><div class="pk-l">Balance</div><div class="pk-v" style="color:'+(bal>=0?'var(--gr)':'var(--rd)')+';font-size:12px">'+fmt(bal)+'</div></div></div><div class="bank-row"><div class="bank-item"><div class="bl">Bank</div><div class="bv">'+esc(cc.bank||'—')+'</div></div><div class="bank-item"><div class="bl">Account</div><div class="bv">'+esc(cc.acct||'—')+'</div></div></div></div>';}
+  if(cat==='supplier'){var s=suppliers.find(function(x){return x.id==id});if(!s)return;payState.payeeName=s.company;payState.payeeType='supplier';var paid=totalPaid('supplier',id),pend=totalPend('supplier',id);var _ps=G('pay-payee-summary');if(_ps)_ps.innerHTML='<div class="payee-card"><div class="pk4"><div class="pk"><div class="pk-l">Total Paid</div><div class="pk-v" style="color:var(--gr)">'+fmt(paid)+'</div></div><div class="pk"><div class="pk-l">Pending</div><div class="pk-v" style="color:var(--am)">'+fmt(pend)+'</div></div><div class="pk"><div class="pk-l">Total</div><div class="pk-v" style="color:var(--pu)">'+fmt(paid+pend)+'</div></div></div><div class="bank-row"><div class="bank-item"><div class="bl">Bank</div><div class="bv">'+esc(s.bank||'—')+'</div></div><div class="bank-item"><div class="bl">Account</div><div class="bv">'+esc(s.acct||'—')+'</div></div></div></div>';}
+  else if(cat==='contractor'){var cc=contractors.find(function(x){return x.id==id});if(!cc)return;payState.payeeName=cc.company;payState.payeeType='contractor';var wp=cwp(cc),tv=ctv(cc)||+cc.agreed||0,da=tv*(wp/100),p2=totalPaid('contractor',id),pe2=totalPend('contractor',id),bal=da-p2-pe2;var _ps=G('pay-payee-summary');if(_ps)_ps.innerHTML='<div class="payee-card"><div class="pk4"><div class="pk"><div class="pk-l">Agreed</div><div class="pk-v" style="color:var(--pu);font-size:12px">'+fmt(cc.agreed)+'</div></div><div class="pk"><div class="pk-l">Progress</div><div class="pk-v" style="color:var(--put)">'+wp.toFixed(1)+'%</div></div><div class="pk"><div class="pk-l">Work Done</div><div class="pk-v" style="color:var(--put);font-size:12px">'+fmt(da)+'</div></div><div class="pk"><div class="pk-l">Paid</div><div class="pk-v" style="color:var(--gr);font-size:12px">'+fmt(p2)+'</div></div><div class="pk"><div class="pk-l">Pending</div><div class="pk-v" style="color:var(--am);font-size:12px">'+fmt(pe2)+'</div></div><div class="pk"><div class="pk-l">Balance</div><div class="pk-v" style="color:'+(bal>=0?'var(--gr)':'var(--rd)')+';font-size:12px">'+fmt(bal)+'</div></div></div><div class="bank-row"><div class="bank-item"><div class="bl">Bank</div><div class="bv">'+esc(cc.bank||'—')+'</div></div><div class="bank-item"><div class="bl">Account</div><div class="bv">'+esc(cc.acct||'—')+'</div></div></div></div>';}
 }
 function payStep3(){
   var cat=G('pay-cat').value;if(!cat){toast('Select a category');return}
